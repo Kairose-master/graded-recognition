@@ -9,7 +9,7 @@ abstract: |
 # 1. Question
 
 Two inputs with the same meaning are, to a recognizer, two inputs. The
-recognition-paths framework [@rp] makes this precise for Horn logic: a
+recognition-paths framework [1] makes this precise for Horn logic: a
 recognizer $\rho$ induces a behavioural identity $\approx_\rho$ on premise
 traces, logical identity $\equiv_L$ is theory equivalence, and $\rho$ factors
 through $\equiv_L$ if and only if it identifies every pair of logically
@@ -18,7 +18,7 @@ part of that programme found that no recognizer examined, language models
 to 1.5B and small constructed models alike, identifies logically identical
 traces; in particular a trace and its extension by a *derivable* clause,
 which changes no consequence, are distinguished by every one of them
-[@ppi].
+[2].
 
 That is a negative result about identification. This paper asks the
 positive question it leaves open: *which* logically identical inputs does a
@@ -286,9 +286,9 @@ tested, and is not offered as new mathematics.
 
 # References
 
-- [@rp] J. Jang, *Recognition paths: logical and behavioural identity for
+- [1] J. Jang, *Recognition paths: logical and behavioural identity for
   Horn traces* (Lean 4). Zenodo, doi:10.5281/zenodo.22495808.
-- [@ppi] J. Jang, *Proof-path invariance: Hankel tables for recognizer
+- [2] J. Jang, *Proof-path invariance: Hankel tables for recognizer
   identity* (data, code, results). Zenodo, doi:10.5281/zenodo.22495706;
   draft `docs/DRAFT.md`.
 - Models: `jinu0633/recognition-paths-recognizers`, folder `rq2/`
