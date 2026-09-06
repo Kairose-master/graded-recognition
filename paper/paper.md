@@ -1,152 +1,364 @@
 ---
-title: "Budgets as grades: which equal-meaning inputs a budgeted reasoner distinguishes"
+title: "Budgets as Grades: Which Equal-Meaning Inputs a Budgeted Reasoner Distinguishes"
 author: "Jinu Jang"
-date: "September 2026 (draft v0.1)"
+date: "September 2026"
 abstract: |
-  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask which of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure; we prove in Lean 4 (core only) that the limit is sound and complete, that budget-$k$ behavioural identity is blind to order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84, 0.93]$), whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a $0.95$ criterion) while holding for a model trained under a smaller budget. Two language models (0.5B, 1.5B) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query, with a small residual in the depth direction. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training, not architecture, and was decided by testing the law rather than assuming it.
+  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask *which* of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds of forward chaining, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-$k$ behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84,0.93]$) whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a preregistered $0.95$ criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation, so the learned operator satisfies the lax inequality $T_k\circ T_j\subseteq T_{j+k}$ but not the equation. Two language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query, with a small residual in the depth direction. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture, and was decided by testing the law rather than by assuming it.
 ---
 
-# 1. Question
+# Introduction
 
 Two inputs with the same meaning are, to a recognizer, two inputs. The
-recognition-paths framework [1] makes this precise for Horn logic: a
-recognizer $\rho$ induces a behavioural identity $\approx_\rho$ on premise
-traces, logical identity $\equiv_L$ is theory equivalence, and $\rho$ factors
-through $\equiv_L$ if and only if it identifies every pair of logically
-identical traces (the Recognition Factorization Theorem). The empirical
-part of that programme found that no recognizer examined, language models
-to 1.5B and small constructed models alike, identifies logically identical
-traces; in particular a trace and its extension by a *derivable* clause,
-which changes no consequence, are distinguished by every one of them
-[2].
+recognition-paths framework [1] makes this precise for propositional Horn
+logic. A *recognizer* is any map from an ordered premise trace and a query to
+an observation. It induces a behavioural identity $\approx_\rho$ on traces
+(no context and no query separates them); logical identity $\equiv_L$ is
+theory equivalence (the same consequences for every query); both are
+congruences on the free monoid of traces, and the recognizer *respects
+logic* exactly when $\equiv_L$ refines $\approx_\rho$, equivalently when a
+unique monoid morphism from the logical quotient to the behavioural quotient
+exists (the Recognition Factorization Theorem, machine-checked in Lean).
 
-That is a negative result about identification. This paper asks the
-positive question it leaves open: *which* logically identical inputs does a
-recognizer separate, and is there a mathematical object that predicts the
-answer? The object we propose is the graded closure: forward chaining
-stopped after $k$ rounds. Its grades are computation budgets, and it makes
-two predictions that can be preregistered and tested, one about
-identification and one about composition. The first held. The second
-failed for the model it was primarily tested on. Both outcomes are the
-content of the paper.
+The empirical half of that programme [2] found that no recognizer examined
+respects logic: language models up to 1.5B parameters and small constructed
+models alike distinguish premise permutations, repetitions, and, most
+robustly, a trace from its extension by a *derivable* clause, a clause that
+changes no consequence. A set encoder that is permutation-invariant by
+architecture is exactly the syntactic quotient and only partly the semantic
+one; an equivalence objective does not change this. That is a negative
+result about identification.
 
-# 2. The graded closure
+This paper asks the positive question it leaves open. If a recognizer does
+not identify all logically identical inputs, *which* of them does it separate,
+and is there a mathematical object that predicts the answer rather than
+describes it after the fact? The programme's stated rule is that the object
+must come after an observed law, not before: observation, then equivalence,
+then quotient, then operations and equations, then an algebraic theory, and
+only then a monad. The results of [2] gave the first three. This paper
+supplies an object that generates equations, tests two of them under
+preregistration, and reports that one held and one failed.
 
-Fix a set of atoms and a Horn theory $\Gamma$ (a set of clauses
-$a_1\wedge\dots\wedge a_m\to b_1\wedge\dots\wedge b_n$). For a set of atoms
-$S$ let $\mathrm{step}_\Gamma(S)$ be $S$ together with the heads of all
-clauses whose bodies lie in $S$, and let
-$$T_0 S = S,\qquad T_{k+1}S=\mathrm{step}_\Gamma(T_kS).$$
-The following are proved in `RecognitionPaths/Graded.lean` (Lean 4, no
-Mathlib; names in parentheses):
+The object is the *graded closure*. Forward chaining, stopped after $k$
+parallel rounds, is an operator $T_k$ on sets of atoms. The family
+$(T_k)_{k\in\mathbb N}$ has $T_0=\mathrm{id}$ and $T_j\circ T_k=T_{j+k}$; it is
+an $\mathbb N$-graded monad on the poset of atom sets [3,4] whose limit
+$T_\infty$ is the closure operator of Horn logic. Only the limit is
+idempotent. Reading the grade as a *computation budget* turns the algebra
+into predictions about recognizers with a budget knob.
 
-1. $T_j(T_kS)=T_{j+k}S$ (`rounds_add`): the grades add.
-2. $S\subseteq T_kS\subseteq T_{k+d}S$ (`rounds_extensive`,
-   `rounds_le_add`); $T_k$ is monotone in $S$ and in $\Gamma$
-   (`rounds_mono`, `rounds_mono_theory`).
-3. Soundness: every atom in $T_kS$ holds in every model of $\Gamma$
-   containing $S$ (`rounds_sound`). Completeness: $T_\infty S=\bigcup_kT_kS$
-   is a model of $\Gamma$ (`limit_models`), hence semantic entailment is
-   entailment at some finite grade (`entails_iff_exists_rounds`).
+**Contributions.**
 
-So $(T_k)_{k\in\mathbb N}$ is an $\mathbb N$-graded monad on the poset of
-atom sets whose $\infty$-stage is the (idempotent) closure monad. Only the
-limit is idempotent: $T_k\circ T_k=T_{2k}\neq T_k$.
+1. *Theory.* A Lean 4 development (core library only) of the graded closure:
+   the graded-monad laws, soundness and completeness of the limit, a
+   budget-$k$ behavioural identity $\approx_k$ that is blind to order and
+   repetition at every grade, the theorem that a trace and its extension by
+   one clause are separated at budget $k$ if and only if the extension moves
+   some query's derivation from depth $>k$ to depth $\le k$, and the
+   composition law read on inputs: pre-saturating the hypotheses by $j$
+   rounds and reading with budget $k$ equals reading with budget $j+k$.
+2. *A held prediction.* The separation theorem, preregistered as an
+   interaction between two budgets on a frozen table of 200 fresh Horn cases,
+   held for a learned iterative reasoner with a rounds budget, with the full
+   predicted shape and with exact agreement with the symbolic $k$-round
+   reasoner at every budget.
+3. *A failed prediction.* The composition law, preregistered on the same
+   weights, failed at the two tight budget pairs and held at the two others;
+   all violations were lost derivations from multi-atom hypothesis sets. A
+   model trained under a smaller budget satisfied the law. The learned
+   reasoner is exactly graded in what it separates and only laxly graded in
+   how it composes.
+4. *Language models.* At 0.5B and 1.5B parameters, single forward pass, the
+   models do not read the table at the decision level; on the margin level
+   the variable that predicts their sensitivity to redundant clauses is
+   lexical overlap with the query, not depth.
 
-**Graded entailment and identity.** Write $\Gamma\vdash_k(H\Rightarrow g)$
-for $g\in T_kH$. Budget-$k$ identity of two traces $u,w$ is
-$$u\approx_k w\iff \forall q,\ \Gamma(u)\vdash_k q\leftrightarrow\Gamma(w)\vdash_k q$$
-(`GradedEquiv`). It is an equivalence relation, blind to permutation and
-repetition at every grade (`gradedEquiv_of_perm`, `gradedEquiv_dup`), and
-identity at every grade implies $\equiv_L$ (`logicalEquiv_of_gradedEquiv`).
-The converse fails at any fixed grade, and the failure is characterised
-exactly:
+Everything is frozen (SHA-256 locks on tables, commit hashes on code,
+weights on Hugging Face with training logs) and every learned-model result
+was preceded by a committed preregistration naming the comparison, the
+criterion, the controls and the sentence to be reported on failure.
 
-> **Theorem (`gradedEquiv_append_iff`).** For a trace $w$ and a clause $c$,
-> $w\approx_k w{+}[c]$ if and only if every query answered within $k$
-> rounds from $w{+}[c]$ is answered within $k$ rounds from $w$.
-> Equivalently (`not_gradedEquiv_append_iff`), $w$ and $w{+}[c]$ are
-> separated at budget $k$ iff some query's derivation is moved by $c$ from
-> depth $>k$ to depth $\le k$.
+# Related work
 
-For a derivable $c$ the separation is transient: for every query there is
-a grade beyond which $w$ and $w{+}[c]$ agree
-(`gradedEquiv_append_derivable_eventually`).
+*Order sensitivity of language models.* Chen et al. [5] showed that premise
+order changes accuracy on deductive tasks even when the logic is unchanged;
+metamorphic and reformulation testing [6,7] and parameterized logical
+benchmarks [8] measure the same phenomenon through accuracy differences.
+Our instrument reads order-*relations* on the answer logits so that identity
+is exact rather than approximate, and compares language models and
+constructed recognizers on the same frozen table [2]. Set-LLM [9] and
+order-centric augmentation [10] aim at permutation invariance; the companion
+paper showed that permutation invariance is strictly weaker than logical
+invariance, and the present one shows that the gap has a graded structure.
 
-**The budgeted recognizer.** $\rho_k(w,q)=[\Gamma(w)\vdash_kq]$ is a
-theory-factoring recognizer; its behavioural identity is $\approx_k$ in
-every context (`roundsRecognizer_contextEquiv_iff`). The composition law
-read on inputs (`entailsK_presaturate`) says
-$$\rho_k(w,\ T_j\{a\}\Rightarrow g)=\rho_{j+k}(w,\ \{a\}\Rightarrow g):$$
-pre-saturating the hypothesis by $j$ rounds and reading with budget $k$ is
+*Depth and computation.* PrOntoQA [11] and related synthetic suites vary
+proof depth and find accuracy falling with depth; Merrill and Sabharwal [12]
+bound what transformers compute per step and what chain of thought adds;
+Barceló et al. [13] characterise message-passing networks by the logic of
+$k$-hop neighbourhoods. Our reasoner is a message-passing network by design,
+so the one-hop-per-round bound is part of its specification, and we say so
+in advance. What is tested is whether training realises the graded reader
+rather than a shortcut, whether the gap closes exactly at the predicted
+budget, and whether the *composition* law, which no locality bound implies,
+holds.
+
+*Graded monads and closure operators.* Graded (parametric effect) monads
+[3,4,14] index a monad by a monoid; the closure operator of Horn logic is the
+classical least-model construction [15], and its truncation at $k$ rounds is
+the standard bounded forward chaining. The novelty is not the algebra, which
+is elementary, but its use as a source of *falsifiable equations* about
+learned recognizers, and the observation that one equation is a property of
+architecture (identification) while the other is a property of training
+(composition).
+
+*Automata and identification.* Behavioural identity as Nerode equivalence
+and finite-test identification as closure [16,17] underlie the companion
+framework; graded identity $\approx_k$ is a family of such equivalences
+indexed by budget, coarser than the syntactic quotient and finer than
+$\equiv_L$ for every finite $k$.
+
+# Setting
+
+We recall the definitions of [1] that are used here. Fix a type of atoms. A
+Horn clause is $a_1\wedge\dots\wedge a_m\to b_1\wedge\dots\wedge b_n$ with
+atoms on both sides; a *trace* $w$ is a finite list of clauses; its *theory*
+$\Gamma(w)$ is the set of clauses occurring in it. A *query* is a pair
+$(H\Rightarrow g)$ of a list of hypothesis atoms and a goal atom. Semantic
+entailment $\Gamma\models(H\Rightarrow g)$ holds when every model of $\Gamma$
+that makes $H$ true makes $g$ true. *Logical identity* is
+$u\equiv_L w$ iff $\Gamma(u)\models q\leftrightarrow\Gamma(w)\models q$ for
+every query $q$; it is a congruence for concatenation, and permuting,
+repeating, or appending a derivable clause to a trace preserves it.
+
+A *recognizer* is a map $\rho(w,q)$ from traces and queries to an observation
+set. Its *behavioural identity* is $u\approx_\rho w$ iff
+$\rho(xuz,q)=\rho(xwz,q)$ for all contexts $x,z$ and queries $q$; it is a
+congruence, and the quotient $B_\rho$ is a monoid. The recognizer *respects
+logic* when $u\equiv_Lw$ implies $u\approx_\rho w$, equivalently (the
+Recognition Factorization Theorem) when there is a unique monoid morphism
+$L\to B_\rho$ commuting with the two quotient maps. The experiments of [2]
+read language models through Boolean order relations on the answer logits
+(decision: YES-logit above NO-logit; preference: one query's margin above
+another's) so that $\approx_\rho$ restricted to a finite test family is an
+exact identity of Boolean profiles, and found the refinement to fail for
+every recognizer tested.
+
+# The graded closure
+
+## Definitions and laws
+
+Let $S$ range over sets of atoms, represented as predicates. One parallel
+round of forward chaining under $\Gamma$ is
+$$\mathrm{step}_\Gamma(S)=S\cup\{b : (A\to B)\in\Gamma,\ A\subseteq S,\ b\in B\},$$
+and the $k$-round operator is defined by
+$$T_0S=S,\qquad T_{k+1}S=\mathrm{step}_\Gamma(T_kS).$$
+All statements below are proved in `RecognitionPaths/Graded.lean`; Lean
+names are given in parentheses.
+
+**Proposition 1 (graded-monad laws).** For all $j,k$ and $S$:
+(i) $T_j(T_kS)=T_{j+k}S$ (`rounds_add`);
+(ii) $S\subseteq T_kS\subseteq T_{k+d}S$ (`rounds_extensive`, `rounds_le_add`);
+(iii) $T_k$ is monotone in $S$ and in $\Gamma$ (`rounds_mono`, `rounds_mono_theory`).
+
+*Proof.* (i) by induction on $j$, using $T_{j+1}=\mathrm{step}\circ T_j$ and
+$(j+1)+k=(j+k)+1$; (ii) and (iii) by induction on $k$, since $\mathrm{step}$
+is extensive and monotone in both arguments. $\square$
+
+Thus $(T_k)$ is an $\mathbb N$-graded monad on the poset of atom sets, with
+unit the identity at grade $0$ and multiplication the identity
+$T_jT_k=T_{j+k}$; it is *not* a monad at any single positive grade, since
+$T_kT_k=T_{2k}\neq T_k$ in general.
+
+**Theorem 2 (the limit is the closure).** Let $T_\infty S=\bigcup_kT_kS$.
+(i) *Soundness:* every atom of $T_kS$ holds in every model of $\Gamma$ that
+contains $S$ (`rounds_sound`). (ii) *Completeness:* $T_\infty S$ is a model of
+$\Gamma$ (`limit_models`); hence
+$\Gamma\models(H\Rightarrow g)\iff\exists k,\ g\in T_kH$ (`entails_iff_exists_rounds`).
+
+*Proof.* (i) by induction on $k$: a clause whose body holds in the model has
+its head in the model. (ii) For a clause $A\to B$ of $\Gamma$ with
+$A\subseteq T_\infty S$, each atom of the finite list $A$ lies in some
+$T_{k_a}S$; by nestedness all lie in $T_KS$ for $K=\sum k_a$, so $B\subseteq
+T_{K+1}S$. Completeness follows by instantiating the definition of
+$\models$ at the model $T_\infty H$, which contains $H$ at grade $0$. $\square$
+
+## Graded identity
+
+Write $\Gamma\vdash_k(H\Rightarrow g)$ for $g\in T_kH$ (`EntailsK`).
+*Budget-$k$ identity* of traces is
+$$u\approx_kw\iff\forall q,\ \Gamma(u)\vdash_kq\leftrightarrow\Gamma(w)\vdash_kq\qquad(\texttt{GradedEquiv}).$$
+
+**Proposition 3.** For every $k$: (i) $\approx_k$ is an equivalence
+relation; (ii) permuting or repeating a trace preserves it (in Lean,
+`gradedEquiv_of_perm` and `gradedEquiv_dup`); (iii) if $u\approx_kw$ for every
+$k$ then $u\equiv_Lw$ (`logicalEquiv_of_gradedEquiv`), and conversely
+$u\equiv_Lw$ iff for every query the sets of grades at which $u$ and $w$
+answer it are both empty or both nonempty (`logicalEquiv_iff_limit`).
+
+*Proof.* (ii) $T_k$ depends on the trace only through its theory, and
+$\Gamma(u)=\Gamma(w)$ for permutations and repetitions. (iii) from
+Theorem 2(ii). $\square$
+
+The converse of (iii) fails at every fixed grade, and the failure is exactly
+characterised:
+
+**Theorem 4 (separation of an extension).** For a trace $w$, a clause $c$ and
+a budget $k$,
+$$w\approx_kw{+}[c]\iff\forall q:\ \Gamma(w{+}[c])\vdash_kq\ \Rightarrow\ \Gamma(w)\vdash_kq$$
+(`gradedEquiv_append_iff`). Equivalently, $w$ and $w{+}[c]$ are separated at
+budget $k$ iff some query is answered within $k$ rounds after the extension
+and not before it (`not_gradedEquiv_append_iff`).
+
+*Proof.* Adding a clause can only add derivations within a fixed budget
+(monotonicity in $\Gamma$), so one implication of $\approx_k$ always holds
+and the other is the stated condition. $\square$
+
+**Corollary 5 (transience).** If $c$ is derivable from $w$, then for every
+query $q$ there is a grade $K$ with
+$\Gamma(w{+}[c])\vdash_{K+d}q\leftrightarrow\Gamma(w)\vdash_{K+d}q$ for all
+$d$ (`gradedEquiv_append_derivable_eventually`).
+
+*Proof.* If $\Gamma(w)\models q$, take $K$ from completeness; otherwise both
+sides are false at every grade by soundness and $w{+}[c]\equiv_Lw$. $\square$
+
+Theorem 4 says what the budgeted recognizer distinguishes: a redundant
+extension is visible exactly when it *shortens a derivation across the
+budget*. Corollary 5 says the visibility disappears once the budget covers
+the depth. Read as a prediction about an arbitrary recognizer with a budget
+knob, the theorem asserts a specific interaction between the kind of
+extension and the budget, and that is what is tested in Section 6.
+
+## The budgeted recognizer and the composition law
+
+Let $\rho_k(w,q)=[\Gamma(w)\vdash_kq]$ (`roundsRecognizer`). It is a
+theory-factoring recognizer in the sense of [1], so it is invariant under
+permutation and repetition of any block in any context, and its behavioural
+identity is $\approx_k$ in every context:
+$u\approx_{\rho_k}w\iff\forall x,z,\ xuz\approx_kxwz$
+(`roundsRecognizer_contextEquiv_iff`).
+
+**Proposition 7 (composition law on inputs).** For all $j,k$, hypotheses $H$
+and goal $g$: $g\in T_k(T_jH)\iff g\in T_{j+k}H$ (`entailsK_presaturate`).
+On the recognizer,
+$$\rho_k(w,\ T_jH\Rightarrow g)=\rho_{j+k}(w,\ H\Rightarrow g):$$
+pre-saturating the hypotheses by $j$ rounds and reading with budget $k$ is
 reading with budget $j+k$. A hint buys exactly its depth.
 
-The mathematics here is elementary. Its role is to name the object whose
-equations become predictions; the paper's claims are about which
-recognizers satisfy them.
+Proposition 7 is a restatement of Proposition 1(i), but as a statement about
+inputs it is testable on any recognizer that accepts a hypothesis *set* and
+has a budget knob, and it is not implied by the locality bound that makes
+Theorem 4's pattern available to a message-passing architecture: a model may
+derive correctly from single atoms at every budget and still fail to use a
+set of hypotheses as the algebra requires. It is therefore the second,
+independent prediction.
 
-# 3. Two predictions
+# Predictions and preregistration
 
-**P1 (identification; RQ2).** Take a base theory $D$ with a target query of
-depth $d\ge3$ from a single hypothesis atom. Let $F$ add a derivable clause
-that shortens the target's depth by the least possible amount, and $C$ add
-a derivable clause that preserves it; $D\equiv_LF\equiv_LC$. For a
-recognizer with budget $k$ let $\mathrm{dis}_X(k)$ be the fraction of
-cases whose target decision differs between $D$ and $X$, and
-$\Delta(k)=\mathrm{dis}_F(k)-\mathrm{dis}_C(k)$. The theorem predicts
-$\Delta(k)>0$ for $k$ below the base depth and $\Delta(k)=0$ above it.
-The preregistered test is the interaction $I=\Delta(2)-\Delta(4)$ for a
-learned reasoner trained at four rounds: P1 holds iff $I>0$ with a paired
-case-bootstrap 95\% CI excluding 0 and $\Delta(2)\ge0.10$.
+Both predictions were committed, with the rules below, before any learned
+recognizer was run on the corresponding table; the symbolic reasoner and the
+oracle were run first as deterministic control validation.
 
-**P3 (composition; RQ2b).** For the same weights, with hypothesis sets
-$H_j=T_j\{a\}$, the agreement rate between $\rho(H_j;k)$ and
-$\rho(H_0;j{+}k)$ must have CI lower bound $\ge0.95$ on the four pairs
-$(j,k)\in\{(1,2),(2,1),(2,2),(1,3)\}$ where the symbolic yes-rate changes
-between budgets $k$ and $j+k$ (so that a constant answer cannot pass).
+**P1 (identification).** Take a base theory $D$ with a target query
+$(a\Rightarrow g)$ of depth $d\ge3$. Let $F$ append a derivable clause that
+shortens the target's depth by the least possible amount, and $C$ append a
+derivable clause that preserves it; $D\equiv_LF\equiv_LC$ by certified closure
+equality. For a recognizer with budget $k$ let $\mathrm{dis}_X(k)$ be the
+fraction of cases whose target decision differs between $D$ and $X$, and
+$\Delta(k)=\mathrm{dis}_F(k)-\mathrm{dis}_C(k)$. Theorem 4 predicts
+$\Delta(k)>0$ for $k$ below the base depth and $\Delta(k)=0$ once $k$ covers
+it. The primary comparison is the interaction $I=\Delta(2)-\Delta(4)$ for a
+learned reasoner trained at four rounds. *Criterion:* $I>0$ with a paired
+case-bootstrap 95\% confidence interval ($B=5000$) excluding $0$, and
+$\Delta(2)\ge0.10$. *Controls:* the exact oracle and a constant recognizer
+(both $\Delta=0$), the $k$-round symbolic reasoner (the theorem by
+construction), Pythia-70M as an empirical non-reader, and a logic-change
+condition $L$ (one clause deleted so the target becomes underivable) that
+every reading recognizer must separate.
 
-Both were committed with their exclusion rules, tie handling, sample-size
-rationale, controls and failure sentences before any learned recognizer
-was run (`docs/PREREGISTRATION_RQ2.md`, `docs/PREREGISTRATION_RQ2B.md`).
+**P3 (composition).** On the same weights, with hypothesis sets
+$H_j=T_j\{a\}$ for $j\in\{0,1,2\}$, the agreement rate between
+$\rho(H_j;k)$ and $\rho(H_0;j{+}k)$ over cases must have bootstrap lower
+bound $\ge0.95$ on each of the four pairs
+$(j,k)\in\{(1,2),(2,1),(2,2),(1,3)\}$, chosen because the symbolic yes-rate
+on the target changes between budgets $k$ and $j+k$ there, so that a
+constant answer cannot pass.
 
-# 4. Instruments
+Sample size: 200 logical structures; for proportion differences near
+$0.15$ the paired bootstrap half-width is about $0.05$, and for agreement
+near $0.97$ about $0.025$. Both preregistrations state the sentence to be
+reported on failure; the one for P3 is reported verbatim in Section 6.3.
 
-**Table.** 7 atoms; 200 base theories of 5 random clauses with a target of
-depth $\ge3$ from atom $a$ (depth 3: 177, depth 4: 23), generated from one
-seed and taken in order after fixed exclusions; conditions $D$, $F$
-(minimal shortening; never the direct clause), $F_1$ (the direct clause
-$a\to\mathrm{goal}$, maximal shortening and maximal lexical overlap with
-the query), $C$ (depth-preserving, overlap with $\{a,\mathrm{goal}\}$
-matched to $F$ in 181/200 cases), and $L$ (one clause deleted so the
-target becomes underivable: the logic-change control). Four queries per
-case: the target $t$, a depth-1 atom $d_1$, a non-derivable atom $n$, and
-the reversed query $r$. Logical identity of $D,F,F_1,C$ is certified by
-closure equality on every single-atom hypothesis. The RQ2b table takes
-the 200 $D$ theories with hypothesis sets $H_0,H_1,H_2$ for $t$ and $n$.
+# Instruments
 
-**Recognizers.** (i) The exact closure oracle and the $k$-round symbolic
-reasoner, $k\in\{1,2,3,4,6\}$ (control validation: the theorem holds for
-them by construction). (ii) A constant-NO recognizer and Pythia-70M
-(non-reading controls). (iii) The iterative learned reasoner: atom states
-updated along clauses by a message MLP and a GRU cell, max-aggregated per
-head atom (so permutation- and repetition-invariant), read out from the
-goal and hypothesis states; the number of rounds is the budget. 75k
-parameters, trained 6000 steps on random 2–6-clause theories over 7 atoms
-with the 1000 evaluation theories excluded up to atom relabelling, at 4
-rounds (primary) and at 2 rounds (secondary). (iv) A 7-atom set
-recognizer (max-pooled clause encoder; no budget knob). (v)
-Qwen2.5-0.5B-Instruct and 1.5B-Instruct, raw prompt, one forward pass,
-decision by the YES/NO logit comparison, on CPU.
+## Tables
 
-Decisions are Boolean with ties to NO; the extended observation is the
-real margin. All materials are frozen with SHA-256 locks and cited by
-commit (see `REPRODUCE.md`).
+Seven atoms $a,\dots,g$. A base theory is five random Horn clauses (70\%
+single-body single-head, 15\% two-body, 15\% two-head) with target hypothesis
+$a$ and goal the derivable atom of maximal depth, redrawn until the depth is
+at least $3$. Candidate extensions are single-atom clauses $x\to y$ with
+$y\in T_\infty\{x\}$, not already a sub-clause of the theory. $F$ is the
+sorted-first candidate among those that reduce the target depth by the least
+amount; $F_1$ is the direct clause $a\to g$ (maximal shortening and maximal
+lexical overlap with the query, a secondary condition); $C$ is the
+sorted-first depth-preserving candidate with the same overlap with
+$\{a,g\}$ as $F$ when one exists (181 of 200 cases); $L$ deletes the
+sorted-first clause whose removal makes the target underivable. Cases
+without an $F$, a $C$, an $L$, a depth-1 atom or a non-derivable atom are
+dropped and the next draw used: 200 cases from 264 draws, one seed, taken in
+order. Realised depths: base $3$ in 177 cases and $4$ in 23; $F$ reduces to
+$2$ in 176, $3$ in 23, $1$ in 1. Four queries per case: the target $t$, a
+depth-1 atom $d_1$, a non-derivable atom $n$, and the reversed query $r$.
+Rows: $200\times5\times4=4000$. The composition table takes the 200 base
+theories with $H_0=\{a\}$, $H_1=T_1\{a\}$ ($|H_1|\in\{2,3,4\}$), $H_2=T_2\{a\}$
+($|H_2|\in\{3,4,5\}$), for $t$ and $n$: 1200 rows. Both tables carry SHA-256
+locks.
 
-# 5. Results
+## Recognizers
 
-## 5.1 P1 holds, and the learned reasoner is the symbolic one
+*Symbolic.* The exact closure oracle; the $k$-round reasoner
+$[g\in T_kH]$ for $k\in\{0,\dots,6\}$; a constant-NO recognizer.
 
-| budget $k$ | acc($D$, target) | $\mathrm{dis}_F$ | $\mathrm{dis}_{F_1}$ | $\mathrm{dis}_C$ | $\mathrm{dis}_L$ | $\Delta$ [95\% CI] |
+*Iterative learned reasoner.* Each atom carries a state vector
+($d=64$), initialised from a learned embedding plus a learned flag on the
+hypothesis atoms. In each round every clause computes a message from the
+sum and the elementwise minimum of its body states and the current head
+state (a two-layer MLP), messages are aggregated per head atom by an
+elementwise maximum (so the model is invariant to clause permutation and
+repetition by construction), and each atom's state is updated by a GRU cell.
+After $k$ rounds the goal state and the maximum over hypothesis states are
+read out by an MLP into two logits. The number of rounds is the budget and
+can be set at evaluation. 75\,202 parameters. Trained 6000 steps (batch 128,
+AdamW, one-cycle schedule) on random theories of two to six clauses over
+seven atoms with balanced labels and random atom relabelling, with every
+evaluation theory ($D,F,F_1,C,L$ of every case) excluded from training up to
+relabelling. The primary model is trained with a budget of four rounds
+(in-distribution validation accuracy $0.996$); a secondary model with two
+rounds ($0.960$). Both were trained with single-atom hypotheses; the
+composition test feeds them hypothesis *sets* through the same flag, out of
+the training format (for a single atom the modified readout is numerically
+identical to the trained one).
+
+*Set recognizer.* A seven-atom version of the max-pooled clause encoder of
+[2] (168\,386 parameters, validation accuracy $0.951$); no budget knob.
+
+*Language models.* Qwen2.5-0.5B-Instruct and Qwen2.5-1.5B-Instruct, raw
+prompt (no chat template), bullet rendering of the clauses with per-case
+atom names, one forward pass on CPU in float32, observation the pair of
+logits of the tokens YES and NO at the answer position; Pythia-70M
+(step 143000) as the non-reading control.
+
+## Readout
+
+Decisions are Boolean (positive logit strictly above negative; ties count as
+NO). The extended observation is the real margin. All statistics are over
+the 200 cases with paired case bootstrap.
+
+# Results
+
+## P1 holds, and the learned reasoner is the symbolic one
+
+Table 1 gives the primary model at each budget.
+
+| budget $k$ | acc$(D)$, target | $\mathrm{dis}_F$ | $\mathrm{dis}_{F_1}$ | $\mathrm{dis}_C$ | $\mathrm{dis}_L$ | $\Delta$ [95\% CI] |
 |---:|---:|---:|---:|---:|---:|---|
 | 1 | 0.00 | 0.01 | 1.00 | 0.00 | 0.00 | 0.01 [0.00, 0.01] |
 | **2** | 0.00 | **0.89** | 1.00 | **0.00** | 0.00 | **0.89 [0.84, 0.93]** |
@@ -154,84 +366,94 @@ commit (see `REPRODUCE.md`).
 | **4** | 1.00 | **0.00** | 0.00 | **0.00** | 1.00 | **0.00 [0.00, 0.00]** |
 | 6 | 1.00 | 0.00 | 0.00 | 0.00 | 1.00 | 0.00 [0.00, 0.00] |
 
-Table 1: the 4-round learned reasoner on 200 cases.
-$I=\Delta(2)-\Delta(4)=0.885$, 95\% CI $[0.84,0.93]$; P1 holds.
+Table 1. The four-round learned reasoner on 200 cases; decision-change
+rates relative to the base $D$ on the target query.
+$I=\Delta(2)-\Delta(4)=0.885$, 95\% CI $[0.84,0.93]$. **P1 holds.**
 
-The learned reasoner's decision table coincides with the $k$-round
-symbolic reasoner's at every budget: at $k=2$ the 177 depth-3 bases are
-NO and their $F$ extensions (depth 2) YES, the 23 depth-4 bases NO on
-both; at $k=4$ everything is YES and only $L$ is separated. Every
-$D$–$F$ disagreement is $F$ correct and $D$ wrong. The direct clause $F_1$
-separates at $k=1$ (it is read as a depth-1 derivation) and not at $k=4$,
-so lexical overlap plays no role for this recognizer. The controls behave
-as required: the oracle and the constant recognizer give $\Delta=0$,
-Pythia-70M gives $\Delta=-0.02$ $[-0.04,0.01]$ with $\mathrm{dis}_L=0.04$
-(it does not read).
+The learned reasoner's decision table coincides with that of the $k$-round
+symbolic reasoner at every budget (Table 5 in the appendix lists both). At
+$k=2$ the 177 depth-3 bases are NO and their $F$ extensions (depth 2) YES;
+the 23 depth-4 bases are NO on both. At $k=3$ the depth-4 bases separate
+(0.11) and at $k=4$ nothing does except the logic change. Every $D$–$F$
+disagreement is $F$ correct and $D$ wrong; the reverse never occurs. The
+direct clause $F_1$ separates already at $k=1$, because it is a depth-1
+derivation, and not at $k=4$, so lexical overlap with the query plays no
+role for this recognizer. The controls behave as required: oracle and
+constant recognizer give $\Delta=0$; Pythia-70M gives $\Delta=-0.02$
+$[-0.04,0.01]$ and $\mathrm{dis}_L=0.04$, i.e. it does not read.
 
-A caveat stated in advance: in this architecture information flows one
-hop per round, so a *correct* model must show this pattern. The empirical
-content is that training produced this reader and not a shortcut
-(in-distribution accuracy 0.996; no clause-count or lexical heuristic
-survives at $k=2$), that the gap closes exactly at $k=4$, and that the
-pattern is what the theorem says and nothing more.
+A caveat stated in the preregistration: information in this architecture
+flows one hop per round, so a *correct* model must show this pattern. The
+empirical content is that training produced this reader rather than a
+shortcut (no clause-count or lexical heuristic survives at $k=2$), that the
+gap closes exactly at the predicted budget, and that the pattern is what
+Theorem 4 says and nothing more.
 
-**The 2-round model** (trained with a budget too small for its data,
-validation accuracy 0.960) shows the same pattern, $I=0.665$
-$[0.60,0.74]$, and closes the gap at $k=4$ although it never ran four
-rounds in training. It differs in one informative way: at its own budget
-it says YES on 16\% of the depth-3 bases it cannot derive and its decision
-moves on 10\% of the depth-preserving extensions $C$. A model trained
-under an insufficient budget acquires a shortcut component that a merely
-redundant clause can trigger; depth accounts for 0.67 of its 0.77 $F$
-effect.
+## Secondary constructed recognizers
 
-**The set recognizer** (no budget) identifies almost every extension at
-the decision level ($\mathrm{dis}_F=0.01$, $\mathrm{dis}_C=0.00$) and reads
-the logic change ($\mathrm{dis}_L=0.94$). Its margins order the
-conditions $F_1>F>C>0>L$ (mean shifts $+1.91$, $+0.65$, $+0.23$, $-9.3$
-logits): a recognizer without rounds still orders redundant extensions by
-depth shortening in its extended observation.
+*The two-round model.* Trained under a budget too small for its data, it
+shows the same interaction, $I=0.665$ $[0.60,0.74]$, and closes the gap at
+$k=4$ although it never ran four rounds in training (its rounds extrapolate;
+at $k=6$ accuracy degrades to $0.90$ and the logic change becomes partly
+invisible, $\mathrm{dis}_L=0.70$). It differs from the primary model in one
+informative way: at its own budget it says YES on 16\% of the depth-3 bases
+it cannot derive, and its decision moves on 10\% of the depth-preserving
+extensions $C$. A model trained under an insufficient budget acquires a
+shortcut component that a merely redundant clause can trigger; depth
+accounts for $0.67$ of its $0.77$ $F$ effect.
 
-## 5.2 P3 fails for the primary model
+*The set recognizer.* With no budget it identifies almost every extension at
+the decision level ($\mathrm{dis}_F=0.01$, $\mathrm{dis}_{F_1}=0.00$,
+$\mathrm{dis}_C=0.00$) and reads the logic change ($\mathrm{dis}_L=0.94$).
+Its margins nevertheless order the conditions $F_1>F>C>0>L$ (mean shifts on
+the target $+1.91$, $+0.65$, $+0.23$, $-9.3$ logits, with $F-C=0.42$
+$[0.29,0.54]$): a recognizer without rounds still orders redundant
+extensions by depth shortening in its extended observation.
 
-| pair | symbolic | 4-round model (primary) | 2-round model |
+## P3 fails for the primary model
+
+| pair $(j,k)$ | symbolic | four-round model (primary) | two-round model |
 |---|---:|---|---|
-| $j{=}1,k{=}2$ | 1.000 | **0.897 [0.870, 0.925]** | 0.990 [0.980, 0.998] |
-| $j{=}2,k{=}1$ | 1.000 | **0.830 [0.797, 0.863]** | 0.975 [0.960, 0.990] |
-| $j{=}2,k{=}2$ | 1.000 | 0.995 [0.988, 1.000] | 0.998 [0.993, 1.000] |
-| $j{=}1,k{=}3$ | 1.000 | 0.983 [0.970, 0.995] | 1.000 [1.000, 1.000] |
+| $(1,2)$ | 1.000 | **0.897 [0.870, 0.925]** | 0.990 [0.980, 0.998] |
+| $(2,1)$ | 1.000 | **0.830 [0.797, 0.863]** | 0.975 [0.960, 0.990] |
+| $(2,2)$ | 1.000 | 0.995 [0.988, 1.000] | 0.998 [0.993, 1.000] |
+| $(1,3)$ | 1.000 | 0.983 [0.970, 0.995] | 1.000 [1.000, 1.000] |
 
-Table 2: agreement between $\rho(H_j;k)$ and $\rho(H_0;j{+}k)$ on 200
-cases $\times$ 2 queries.
+Table 2. Agreement between $\rho(H_j;k)$ and $\rho(H_0;j{+}k)$ over 200
+cases and two queries, with paired bootstrap 95\% CI.
 
-Two of the four primary pairs fall below the criterion; P3 fails. As
-preregistered: *on 200 fresh Horn cases the learned reasoner did not
-satisfy the composition law $T_k\circ T_j=T_{j+k}$ out of its training
-format; the graded-monad description fits its budget behaviour but not
-its hypothesis-set behaviour, and the law is a property of the symbolic
-reasoner that the learned one does not inherit.*
+Two of the four primary pairs fall below the criterion, so **P3 fails** for
+the primary model. As preregistered, we report: *on 200 fresh Horn cases the
+learned reasoner did not satisfy the composition law $T_k\circ T_j=T_{j+k}$
+out of its training format (agreement $0.897$ $[0.870,0.925]$ at $j=1,k=2$
+and $0.830$ $[0.797,0.863]$ at $j=2,k=1$); the graded-monad description fits
+its budget behaviour but not its hypothesis-set behaviour, and the law is a
+property of the symbolic reasoner that the learned one does not inherit.*
 
-The failure has one direction: in all 41 and 68 disagreements the model
-answers NO from the pre-saturated hypotheses at the tight budget where
-the law says YES. It reads multi-atom hypothesis sets correctly given
-slack (accuracy 1.000 at $k=4$ with $H_1$ and $H_2$), agreement falls with
-the size of the hint (at $j=2,k=1$: $|H_2|=3$: 0.73, 4: 0.63, 5: 0.55) and
-is near-perfect on depth-4 cases (0.957), where a spare round exists. The
-learned operator satisfies $T_k\circ T_j\subseteq T_{j+k}$ with strict
-inclusion on 20–35\% of cases at the tight budgets: it loses part of a
-round when the derivation starts from a set rather than an atom. The
-2-round model, which had to propagate from whatever it was given within
-two rounds, passes all four pairs; this was not preregistered for it and
-is reported as an observation.
+The failure has one direction. In all 41 disagreements at $(1,2)$ and all
+68 at $(2,1)$ the model answers NO from the pre-saturated hypotheses at the
+tight budget where the law says YES; it never answers YES where the law
+says NO. It reads multi-atom hypothesis sets correctly when given slack
+(accuracy $1.000$ at $k=4$ with $H_1$ and with $H_2$); agreement falls with
+the size of the hint (at $(2,1)$: $|H_2|=3$: $0.73$, $4$: $0.63$, $5$:
+$0.55$) and is near-perfect on the depth-4 cases ($0.957$), where a spare
+round exists. The learned operator therefore satisfies the lax inequality
+$T_k\circ T_j\subseteq T_{j+k}$, with strict inclusion on 20–35\% of cases at
+the tight budgets: it loses part of a round when a derivation starts from a
+set rather than an atom. The two-round model, which had to propagate from
+whatever it was given within two rounds, passes all four pairs; this was
+not preregistered for it and is reported as an observation.
 
-## 5.3 Language models: no decision-level reading; margins follow overlap
+## Language models
 
-On this rendering (7 atoms, 5–6 clauses) Qwen2.5-0.5B answers YES on every
-query of every condition and Qwen2.5-1.5B answers NO on every query, so
-the decision-level test cannot be evaluated for either (the audit
-protocol's Gate R). Their margins carry partial reading (comparative
-accuracy $[m_t>m_n]$: 0.79 and 0.89). The mean margin shift on the target
-relative to $D$, with paired-bootstrap CIs, is:
+On this rendering (seven atoms, five or six clauses) Qwen2.5-0.5B answers
+YES on every query of every condition (minimum margin $1.23$) and
+Qwen2.5-1.5B answers NO on every query, so the decision-level test cannot
+be evaluated for either; this is the "not reading" gate of the audit
+protocol in [2] and is reported as not evaluable, not as a refutation. The
+margins carry partial reading (comparative accuracy $[m_t>m_n]$ on the base:
+$0.79$ and $0.89$), so the extended observation can be examined, as
+preregistered, in an exploratory analysis.
 
 | recognizer | $F-C$ | $F_1-F$ | $L$ |
 |---|---|---|---|
@@ -240,60 +462,121 @@ relative to $D$, with paired-bootstrap CIs, is:
 | Qwen2.5-1.5B | 0.048 [0.030, 0.067] | 0.285 [0.268, 0.302] | −0.207 |
 | set recognizer | 0.417 [0.289, 0.540] | 1.264 [1.124, 1.407] | −9.32 |
 
-Table 3: signed margin shifts (logits), 200 cases; exploratory.
+Table 3. Mean signed margin shift on the target query relative to the base,
+in logits, over 200 cases; paired bootstrap 95\% CI. Exploratory.
 
-The shortening clause moves the LLM margins more than the depth-preserving
-clause, with CIs excluding 0, but by 0.03–0.05 logits: three to five times
-the non-reader's surface residual (which exists because $F$ mentions the
-hypothesis atom in 198/200 cases and $C$ in 131/200; on the 181
-overlap-matched cases $F-C$ is 0.025 and 0.029) and an order of magnitude
-below the direct clause's effect. For these language models, what makes
-a redundant clause distinguishable is overwhelmingly its lexical overlap
-with the query; the depth direction is a small residual.
+For both language models the shortening clause moves the margin more than
+the depth-preserving clause, with intervals excluding $0$, but by
+$0.03$–$0.05$ logits: three to five times the non-reader's surface residual
+(which exists because $F$ mentions the hypothesis atom in 198 of 200 cases
+and $C$ in 131; on the 181 overlap-matched cases $F-C$ is $0.025$ and
+$0.029$) and an order of magnitude below the direct clause's effect
+($F_1-F$: $0.10$ and $0.29$). The variable that predicts a redundant
+clause's visibility to these models is lexical overlap with the query; the
+depth direction is a small residual.
 
-# 6. What was learned
+# Discussion
 
-1. **The graded closure predicts identification.** For a budgeted
-   reasoner, a redundant extension is distinguishable exactly when it
-   moves a derivation across the budget; this held on fresh cases with
-   the full predicted shape (large at $k=2$, zero at $k=4$, zero for
-   depth-preserving clauses at every $k$).
-2. **The same object's composition law is not inherited by training.**
-   The 4-round model is exactly graded in what it separates but not
-   exactly graded in how it composes hints with budget; a model trained
-   under a tighter budget is. Architecture makes the law available;
-   training decides whether it holds. This is the first equation of the
-   candidate monad to be *refuted* for a constructed recognizer, and it
-   was refuted by a preregistered test of the law.
-3. **For the language models examined, depth is not the variable.** The
-   quantity that predicts their (margin-level) sensitivity to redundant
-   clauses is lexical overlap with the query. Whether a language model
-   with a genuine budget knob (chain-of-thought length) obeys the
-   composition law is the natural next test and is not attempted here.
+*What the graded object explains.* The companion paper found that every
+recognizer separates a trace from its redundant extension and could not say
+why. Theorem 4 gives the reason for one class of recognizers: separation
+happens exactly when the extension moves a derivation across the budget,
+and it is transient in the budget. The prediction held with the full shape,
+including the zero on depth-preserving extensions at every budget, the
+zero on all extensions at sufficient budget, and the one-sided direction of
+every disagreement. For the learned reasoner, then, the answer to "which
+equal-meaning inputs does it distinguish?" is exact and is given by the
+grade.
 
-# 7. Limits and non-claims
+*Architecture versus training.* Two equations of the same object were
+tested on the same weights. The identification equation is made available
+by the architecture (one hop per round) and was realised by training. The
+composition equation is not implied by any locality bound, and the trained
+model violates it in a specific way: it is exactly graded in what it
+separates and only laxly graded in how it composes, with
+$T_kT_j\subseteq T_{j+k}$ and a loss of part of a round when derivations start
+from sets. A model trained under a smaller budget satisfies the equation.
+The graded monad is therefore the right description of the *quotient* the
+recognizer computes; whether the recognizer also carries the monad's
+*multiplication* depends on how it was trained. In the programme's terms,
+the algebraic theory has been reached for one operation and refuted for one
+equation, by a test of the equation and not by construction.
 
-Two language models, both under 2B parameters, one rendering, single
-forward pass; the decision-level LLM tests are not evaluable at this
-scale and are reported as such, not as refutations. The constructed
-models are small and the iterative reasoner's architecture makes P1's
-pattern available to a correct model; the paper's claim is that training
-produced that model and that the graded description has an equation the
-model fails, not that the model "has" a monad. Nothing is claimed about
-the algebraic structure of language models. The Lean development is
-elementary; it fixes definitions and rules out ambiguity in what was
-tested, and is not offered as new mathematics.
+*The language-model variable.* For the two language models the graded
+account is not what predicts sensitivity; lexical overlap with the query
+is. This is consistent with the companion paper's finding that surface
+change outweighs a one-arrow logical change for these models, and it
+sharpens it: the surface variable is now named, and the depth variable is
+measured as a residual an order of magnitude smaller. Nothing here says
+that larger models or models with a genuine budget behave the same way.
 
-# References
+*The next test.* The composition law is an equation between budgets, and a
+single forward pass has no budget knob. A language model with chain of
+thought has one, the number of reasoning tokens, and Proposition 7 then
+makes a quantitative prediction: supplying the $j$-round consequences of
+the hypotheses as premises should be worth exactly $j$ rounds of budget, no
+more. Whether the lax inequality observed here for the learned reasoner
+also holds for a language model, and whether it ever becomes an equation,
+is the natural continuation, and it needs generation rather than a single
+pass.
 
-- [1] J. Jang, *Recognition paths: logical and behavioural identity for
-  Horn traces* (Lean 4). Zenodo, doi:10.5281/zenodo.22495808.
-- [2] J. Jang, *Proof-path invariance: Hankel tables for recognizer
-  identity* (data, code, results). Zenodo, doi:10.5281/zenodo.22495706;
-  draft `docs/DRAFT.md`.
-- Models: `jinu0633/recognition-paths-recognizers`, folder `rq2/`
-  (Hugging Face).
-- Related work on premise-order sensitivity, set-invariant encoders and
-  graded monads is discussed in `proof-path-invariance/docs/RELATED_WORK.md`
-  and `docs/NOVELTY.md`; the graded-monad notion follows Smirnov (2008)
-  and Fujii, Katsumata and Melliès (2016).
+# Limitations
+
+Two language models, both under two billion parameters, one rendering, no
+chat template, one forward pass; the decision-level LLM tests are not
+evaluable at this scale and the margin-level analysis is exploratory. The
+constructed models are small and the iterative reasoner's architecture
+makes the identification pattern available to a correct model, as stated in
+advance; the composition result for the two-round model was not
+preregistered. Seven atoms and five-clause bases bound the depths to $3$
+and $4$; the budgets compared are therefore $2$ against $4$, and monotone
+behaviour across all budgets was not assumed or claimed. The Lean
+development is elementary and is offered to fix definitions, not as new
+mathematics. No claim is made that any recognizer, learned or linguistic,
+"has" a monad; the paper's claims are that a named algebraic object predicts
+one behaviour of a budgeted recognizer exactly, fails to predict another,
+and does not predict the language models examined.
+
+# Artifacts and reproducibility
+
+Theory: `RecognitionPaths/Graded.lean` in the repository `recognition-paths`
+(Lean 4 v4.24.0, no Mathlib; concept DOI 10.5281/zenodo.22495808). Tables,
+generators, runners, analysis and preregistrations: `rq2/` and `docs/` in
+`proof-path-invariance` (concept DOI 10.5281/zenodo.22495706). The frozen
+tables have the SHA-256 locks
+
+```
+rq2_prompts.jsonl   39a82a17f9aae4027586339c58942a0114439bf0f978cf12724e754479676510
+rq2b_presat.jsonl   5e42376dd5e01a7f4f6b04856a74a4596f8378ea6579786acce489928456a910
+```
+
+Weights and training logs: `jinu0633/recognition-paths-recognizers`, folder
+`rq2/` (Hugging Face). The paper repository `graded-recognition` carries the
+manuscript, the exact commands, and verbatim copies of the preregistrations
+with their outcomes. All runs are CPU-only.
+
+# Appendix: control validation and full budget tables
+
+| budget $k$ | symbolic acc$(D)$ | symbolic $\mathrm{dis}_F$ / $\mathrm{dis}_C$ / $\mathrm{dis}_L$ | learned acc$(D)$ | learned $\mathrm{dis}_F$ / $\mathrm{dis}_C$ / $\mathrm{dis}_L$ |
+|---:|---:|---|---:|---|
+| 1 | 0.75 | 0.01 / 0.00 / 0.00 | 0.75 | 0.01 / 0.00 / 0.00 |
+| 2 | 0.75 | 0.89 / 0.00 / 0.00 | 0.75 | 0.89 / 0.00 / 0.00 |
+| 3 | 0.97 | 0.12 / 0.00 / 0.89 | 0.97 | 0.11 / 0.01 / 0.89 |
+| 4 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
+| 6 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
+
+Table 5. The $k$-round symbolic reasoner and the four-round learned
+reasoner on the same table; accuracy is over all four queries.
+
+| pair $(j,k)$ | yes-rate $(H_j;k)$ | yes-rate $(H_0;j{+}k)$ | agreement on $t$ | agreement on $n$ |
+|---|---:|---:|---:|---:|
+| $(1,1)$ | 0.000 | 0.000 | 1.000 | 1.000 |
+| $(1,2)$ | 0.685 | 0.890 | 0.795 | 1.000 |
+| $(2,1)$ | 0.550 | 0.890 | 0.660 | 1.000 |
+| $(2,2)$ | 0.990 | 1.000 | 0.990 | 1.000 |
+| $(1,3)$ | 0.965 | 1.000 | 0.965 | 1.000 |
+| $(1,4)$, $(2,3)$, $(2,4)$ | 1.000 | 1.000 | 1.000 | 1.000 |
+
+Table 6. The composition test for the four-round model by query; the
+symbolic reasoner agrees at 1.000 on every pair and the two-round model at
+0.975 or above on every primary pair.

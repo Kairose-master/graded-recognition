@@ -31,7 +31,8 @@ were made and are cited by commit and hash:
 
 ## Contents
 
-- `paper/paper.md` — the manuscript (Markdown source; PDF built by `paper/build.sh`).
+- `paper/paper.md` — the manuscript source (Markdown); `paper/build.sh` renders an HTML-based PDF.
+- `arxiv/` — the arXiv submission: `paper.tex` (preamble and bibliography), `paper_body.tex` (generated from the Markdown), `paper.pdf`, `build.sh`.
 - `docs/PREREGISTRATION_RQ2.md`, `docs/RESULTS_RQ2.md` — the depth-vs-budget prediction (held).
 - `docs/PREREGISTRATION_RQ2B.md`, `docs/RESULTS_RQ2B.md` — the composition law (failed for the primary model).
 - `REPRODUCE.md` — the exact commands.
