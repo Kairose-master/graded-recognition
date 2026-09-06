@@ -1,0 +1,11 @@
+{
+  "title": "Budgets as grades: which equal-meaning inputs a budgeted reasoner distinguishes",
+  "upload_type": "software",
+  "creators": [{"name": "Jang, Jinu"}],
+  "license": "MIT",
+  "keywords": ["Horn logic", "graded monad", "computation budget", "logical invariance", "constructed recognizers"],
+  "related_identifiers": [
+    {"identifier": "10.5281/zenodo.22495808", "relation": "requires", "resource_type": "software"},
+    {"identifier": "10.5281/zenodo.22495706", "relation": "requires", "resource_type": "software"}
+  ]
+}
