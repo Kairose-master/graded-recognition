@@ -371,7 +371,7 @@ rates relative to the base $D$ on the target query.
 $I=\Delta(2)-\Delta(4)=0.885$, 95\% CI $[0.84,0.93]$. **P1 holds.**
 
 The learned reasoner's decision table coincides with that of the $k$-round
-symbolic reasoner at every budget (Table 5 in the appendix lists both). At
+symbolic reasoner at every budget (Table 4 in the appendix lists both). At
 $k=2$ the 177 depth-3 bases are NO and their $F$ extensions (depth 2) YES;
 the 23 depth-4 bases are NO on both. At $k=3$ the depth-4 bases separate
 (0.11) and at $k=4$ nothing does except the logic change. Every $D$–$F$
@@ -555,7 +555,7 @@ Weights and training logs: `jinu0633/recognition-paths-recognizers`, folder
 manuscript, the exact commands, and verbatim copies of the preregistrations
 with their outcomes. All runs are CPU-only.
 
-# Appendix: control validation and full budget tables
+# Appendix: control validation and full budget tables {-}
 
 | budget $k$ | symbolic acc$(D)$ | symbolic $\mathrm{dis}_F$ / $\mathrm{dis}_C$ / $\mathrm{dis}_L$ | learned acc$(D)$ | learned $\mathrm{dis}_F$ / $\mathrm{dis}_C$ / $\mathrm{dis}_L$ |
 |---:|---:|---|---:|---|
@@ -565,7 +565,7 @@ with their outcomes. All runs are CPU-only.
 | 4 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 | 6 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 
-Table 5. The $k$-round symbolic reasoner and the four-round learned
+Table 4. The $k$-round symbolic reasoner and the four-round learned
 reasoner on the same table; accuracy is over all four queries.
 
 | pair $(j,k)$ | yes-rate $(H_j;k)$ | yes-rate $(H_0;j{+}k)$ | agreement on $t$ | agreement on $n$ |
@@ -577,6 +577,6 @@ reasoner on the same table; accuracy is over all four queries.
 | $(1,3)$ | 0.965 | 1.000 | 0.965 | 1.000 |
 | $(1,4)$, $(2,3)$, $(2,4)$ | 1.000 | 1.000 | 1.000 | 1.000 |
 
-Table 6. The composition test for the four-round model by query; the
+Table 5. The composition test for the four-round model by query; the
 symbolic reasoner agrees at 1.000 on every pair and the two-round model at
 0.975 or above on every primary pair.

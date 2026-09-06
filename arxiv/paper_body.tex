@@ -144,7 +144,7 @@ budget \(k\) & acc\((D)\), target & \(\mathrm{dis}_F\) & \(\mathrm{dis}_{F_1}\) 
 
 Table 1. The four-round learned reasoner on 200 cases; decision-change rates relative to the base \(D\) on the target query. \(I=\Delta(2)-\Delta(4)=0.885\), 95\% CI \([0.84,0.93]\). \textbf{P1 holds.}
 
-The learned reasoner's decision table coincides with that of the \(k\)-round symbolic reasoner at every budget (Table 5 in the appendix lists both). At \(k=2\) the 177 depth-3 bases are NO and their \(F\) extensions (depth 2) YES; the 23 depth-4 bases are NO on both. At \(k=3\) the depth-4 bases separate (0.11) and at \(k=4\) nothing does except the logic change. Every \(D\)--\(F\) disagreement is \(F\) correct and \(D\) wrong; the reverse never occurs. The direct clause \(F_1\) separates already at \(k=1\), because it is a depth-1 derivation, and not at \(k=4\), so lexical overlap with the query plays no role for this recognizer. The controls behave as required: oracle and constant recognizer give \(\Delta=0\); Pythia-70M gives \(\Delta=-0.02\) \([-0.04,0.01]\) and \(\mathrm{dis}_L=0.04\), i.e.~it does not read.
+The learned reasoner's decision table coincides with that of the \(k\)-round symbolic reasoner at every budget (Table 4 in the appendix lists both). At \(k=2\) the 177 depth-3 bases are NO and their \(F\) extensions (depth 2) YES; the 23 depth-4 bases are NO on both. At \(k=3\) the depth-4 bases separate (0.11) and at \(k=4\) nothing does except the logic change. Every \(D\)--\(F\) disagreement is \(F\) correct and \(D\) wrong; the reverse never occurs. The direct clause \(F_1\) separates already at \(k=1\), because it is a depth-1 derivation, and not at \(k=4\), so lexical overlap with the query plays no role for this recognizer. The controls behave as required: oracle and constant recognizer give \(\Delta=0\); Pythia-70M gives \(\Delta=-0.02\) \([-0.04,0.01]\) and \(\mathrm{dis}_L=0.04\), i.e.~it does not read.
 
 A caveat stated in the preregistration: information in this architecture flows one hop per round, so a \emph{correct} model must show this pattern. The empirical content is that training produced this reader rather than a shortcut (no clause-count or lexical heuristic survives at \(k=2\)), that the gap closes exactly at the predicted budget, and that the pattern is what Theorem 4 says and nothing more.
 
@@ -225,7 +225,8 @@ rq2b_presat.jsonl   5e42376dd5e01a7f4f6b04856a74a4596f8378ea6579786acce489928456
 
 Weights and training logs: \texttt{jinu0633/recognition-paths-recognizers}, folder \texttt{rq2/} (Hugging Face). The paper repository \texttt{graded-recognition} carries the manuscript, the exact commands, and verbatim copies of the preregistrations with their outcomes. All runs are CPU-only.
 
-\section{Appendix: control validation and full budget tables}\label{appendix-control-validation-and-full-budget-tables}
+\section*{Appendix: control validation and full budget tables}\label{appendix-control-validation-and-full-budget-tables}
+\addcontentsline{toc}{section}{Appendix: control validation and full budget tables}
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}rrlrl@{}}
@@ -243,7 +244,7 @@ budget \(k\) & symbolic acc\((D)\) & symbolic \(\mathrm{dis}_F\) / \(\mathrm{dis
 \end{longtable}
 }
 
-Table 5. The \(k\)-round symbolic reasoner and the four-round learned reasoner on the same table; accuracy is over all four queries.
+Table 4. The \(k\)-round symbolic reasoner and the four-round learned reasoner on the same table; accuracy is over all four queries.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lrrrr@{}}
@@ -262,4 +263,4 @@ pair \((j,k)\) & yes-rate \((H_j;k)\) & yes-rate \((H_0;j{+}k)\) & agreement on 
 \end{longtable}
 }
 
-Table 6. The composition test for the four-round model by query; the symbolic reasoner agrees at 1.000 on every pair and the two-round model at 0.975 or above on every primary pair.
+Table 5. The composition test for the four-round model by query; the symbolic reasoner agrees at 1.000 on every pair and the two-round model at 0.975 or above on every primary pair.
