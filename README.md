@@ -16,9 +16,11 @@ was then tested as a second, independent prediction and **failed** for
 the same model at tight budgets while holding for a model trained under
 a smaller budget; the one-round sandwich law that the failure suggested
 was preregistered and held on a third set of 200 fresh cases without
-exception. LLMs at 0.5–1.5B do not read the table at the decision
-level; at the margin level their sensitivity is dominated by lexical
-overlap with the query, not by depth.
+exception. Open-weight LLMs at 0.5–1.5B do not read the table at the
+decision level; a language model with a thinking budget is the oracle
+once it thinks and, without thinking, is helped by a shortening clause
+(+0.155) and hurt by a depth-preserving redundant clause (−0.070), both
+effects preregistered on a fresh seed and both removed by the budget.
 
 This is the paper repository. Code, tables and models live where they
 were made and are cited by commit and hash:
@@ -38,7 +40,8 @@ were made and are cited by commit and hash:
 - `docs/PREREGISTRATION_RQ2.md`, `docs/RESULTS_RQ2.md` — the depth-vs-budget prediction (held).
 - `docs/PREREGISTRATION_RQ2B.md`, `docs/RESULTS_RQ2B.md` — the composition law (failed for the primary model).
 - `docs/PREREGISTRATION_RQ2C.md`, `docs/RESULTS_RQ2C.md` — the one-round sandwich law on a fresh seed (held on every case).
-- `docs/PREREGISTRATION_RQ2D.md` — a language model with a thinking budget (running).
+- `docs/PREREGISTRATION_RQ2D.md`, `docs/RESULTS_RQ2D.md` — a language model with a thinking budget (unsigned test failed; oracle with thinking).
+- `docs/PREREGISTRATION_RQ2E.md`, `docs/RESULTS_RQ2E.md` — the signed effects on a fresh seed (held: shortening helps, redundancy hurts, thinking removes both).
 - `REPRODUCE.md` — the exact commands.
 
 The preregistrations here are verbatim copies of the files committed in
