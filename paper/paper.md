@@ -3,7 +3,7 @@ title: "Budgets as Grades: Which Equal-Meaning Inputs a Budgeted Reasoner Distin
 author: "Jinu Jang"
 date: "September 2026"
 abstract: |
-  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask *which* of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds of forward chaining, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-$k$ behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84,0.93]$) whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a preregistered $0.95$ criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation. A third preregistered test on a further 200 fresh cases confirmed the resulting one-round sandwich law without exception: the learned operator's answer from $j$-round-saturated hypotheses at budget $k$ lies between the symbolic answers at budgets $j+k-1$ and $j+k$, so it is a lax graded reader with exactly one round of slack. Two open-weight language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query. A language model with a thinking budget (Gemini 3.1 Flash-Lite) is the exact oracle on the table once it thinks; without thinking, the preregistered unsigned test failed, and a preregistered follow-up on a further fresh set of 200 cases showed why: a depth-shortening redundant clause raises its correct-answer rate by $0.155$ and an equally redundant depth-preserving clause lowers it by $0.070$, two effects of opposite sign that cancel in an unsigned statistic and both vanish once the model can spend tokens. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture; and for a language model at zero budget the distinguishing variable is two-sided, depth and clause count, and was found by testing laws rather than by assuming them.
+  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask *which* of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds of forward chaining, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-$k$ behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84,0.93]$) whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a preregistered $0.95$ criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation. A third preregistered test on a further 200 fresh cases confirmed the resulting one-round sandwich law without exception: the learned operator's answer from $j$-round-saturated hypotheses at budget $k$ lies between the symbolic answers at budgets $j+k-1$ and $j+k$, so it is a lax graded reader with exactly one round of slack. Two open-weight language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query. A language model with a thinking budget (Gemini 3.1 Flash-Lite) is the exact oracle on the table once it thinks; without thinking, the preregistered unsigned test failed, and a preregistered follow-up on a further fresh set of 200 cases showed why: a depth-shortening redundant clause raises its correct-answer rate by $0.155$ and an equally redundant depth-preserving clause lowers it by $0.070$, two effects of opposite sign that cancel in an unsigned statistic and both vanish once the model can spend tokens. A fourth preregistered test found the cost to grow with the number of redundant clauses, an irrelevant clause to cost three times a redundant one, and the budget response to be a step rather than a slope. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture; and for a language model at zero budget the distinguishing variable is two-sided, depth and clause count, and was found by testing laws rather than by assuming them.
 ---
 
 # Introduction
@@ -80,7 +80,11 @@ into predictions about recognizers with a budget knob.
    unsigned interaction failed; the preregistered signed follow-up on a
    fresh table held: a shortening clause helps ($+0.155$), a
    depth-preserving redundant clause hurts ($-0.070$), and thinking removes
-   both effects exactly.
+   both effects exactly. A dose–response test then showed the cost growing
+   with the number of redundant clauses, an irrelevant clause costing three
+   times a redundant one (the preregistered "count" expectation was wrong),
+   and the budget acting as a threshold: about 140 thinking tokens change
+   nothing and about 300 make the model the oracle.
 
 Everything is frozen (SHA-256 locks on tables, commit hashes on code,
 weights on Hugging Face with training logs) and every learned-model result
@@ -303,6 +307,16 @@ at B0 (fixes minus breaks on the target) is $\ge+0.05$ with CI above 0;
 (b) that of $C$ is $\le-0.05$ with CI below 0; (c) at B1
 $\mathrm{dis}_F,\mathrm{dis}_C\le0.02$.
 
+**P7 and P8 (dose–response).** On the fresh table at B0: P7a, the net
+effect of three depth-preserving redundant clauses is more negative than
+that of one (paired CI excluding 0); P7b, a three-way discrimination on
+$\delta=$ net($N_1$) $-$ net($C_1$), where $N_1$ adds one irrelevant clause
+(not derivable, and invisible from the hypothesis): $|\delta|\le0.05$
+"count", $\delta>0.05$ "redundancy", $\delta<-0.05$ "distraction", with
+"count" stated as the expectation. P8: with an intermediate budget B256
+(about 140 thinking tokens used), the effects of $F$ and $C_1$ shrink
+relative to B0 with CIs excluding 0 and do not reverse sign.
+
 **P4 (sandwich).** After P3 failed with all violations in one direction,
 a third table of 200 cases was generated from a new seed and the weakened
 law was preregistered: $g\in T_{j+k-1}\{a\}$ implies $\rho(H_j;k)=$ YES, and
@@ -382,7 +396,13 @@ for this model, so the observation is the generated text and the decision
 its first token, YES or NO (unparseable, 3 of 11\,200 requests, counted as
 NO). Rows: the RQ2 rows for queries $t$ and $n$ and the pre-saturated rows
 for $j\in\{1,2\}$, on the first table (RQ2d) and on the fresh table
-(RQ2e), 5600 requests each.
+(RQ2e), 5600 requests each. The dose–response table (RQ2f) adds, on the
+fresh cases, $C_2$ and $C_3$ ($C_1$ plus the next one or two sorted-first
+depth-preserving derivable clauses; 155 and 106 cases have them), $N_1$
+(198 cases), and a budget of 256 tokens for $D,F,F_1,C_1,L$; 2259
+requests. A pilot showed the model exposes three effective thinking
+levels, 0, about 140 (budgets 256 and 512) and about 300 tokens (1024 and
+2048).
 
 ## Readout
 
@@ -409,7 +429,7 @@ rates relative to the base $D$ on the target query.
 $I=\Delta(2)-\Delta(4)=0.885$, 95\% CI $[0.84,0.93]$. **P1 holds.**
 
 The learned reasoner's decision table coincides with that of the $k$-round
-symbolic reasoner at every budget (Table 6 in the appendix lists both). At
+symbolic reasoner at every budget (Table 8 in the appendix lists both). At
 $k=2$ the 177 depth-3 bases are NO and their $F$ extensions (depth 2) YES;
 the 23 depth-4 bases are NO on both. At $k=3$ the depth-4 bases separate
 (0.11) and at $k=4$ nothing does except the logic change. Every $D$–$F$
@@ -576,6 +596,42 @@ it to $0.93$–$0.95$); at B1 the direct clause saves thinking tokens ($-78$,
 $-34$ relative to $D$) and the depth-preserving clause costs some ($+31$,
 $+39$), while the minimal shortening saves none.
 
+## Dose–response: what the cost is a cost of, and how the budget acts
+
+| condition at B0 | $n$ | net effect [95\% CI] |
+|---|---:|---|
+| $F$ (minimal shortening) | 200 | +0.155 [0.110, 0.210] |
+| $F_1$ (direct clause) | 200 | +0.220 [0.165, 0.280] |
+| $C_1$ (one depth-preserving redundant clause) | 200 | −0.070 [−0.120, −0.020] |
+| $C_2$ (two) | 155 | −0.206 [−0.284, −0.129] |
+| $C_3$ (three) | 106 | −0.283 [−0.377, −0.189] |
+| $N_1$ (one irrelevant non-derivable clause) | 198 | −0.217 [−0.278, −0.157] |
+
+Table 6. Net effect (fixes minus breaks on the target) of each condition
+relative to $D$ for Gemini 3.1 Flash-Lite without thinking, fresh table.
+
+| budget (tokens used) | acc$(D)$ | net $F$ | net $F_1$ | net $C_1$ | $\mathrm{dis}_L$ |
+|---|---:|---:|---:|---:|---:|
+| 0 | 0.78 | +0.155 | +0.220 | −0.070 | 0.78 |
+| 256 (≈140) | 0.80 | +0.140 | +0.200 | −0.070 | 0.80 |
+| 1024 (≈300) | 1.00 | 0 | 0 | 0 | 1.00 |
+
+Table 7. The budget response on the same cases.
+
+**P7a holds**: on the 106 cases with all three doses, $C_1$ $-0.057$,
+$C_2$ $-0.217$, $C_3$ $-0.283$; $C_3-C_1=-0.226$ $[-0.311,-0.151]$. **P7b
+falls in the distraction cell**, not the expected count cell:
+$\delta=-0.146$ $[-0.212,-0.081]$. An irrelevant clause that the model
+could not have derived costs about three times as much as a redundant one
+it could have, and about as much as two redundant ones, although neither
+touches the target's derivation. The cost of an added clause is therefore
+not a cost of length; it depends on the clause's logical relation to the
+theory, derivable being cheap and underivable expensive. **P8 fails**: at
+about 140 thinking tokens nothing changes ($F$ $+0.140$, $C_1$ $-0.070$,
+accuracy $0.80$), and at about 300 the model is the oracle. As
+preregistered, the budget is not a grade for this model; it is a
+threshold. The B0 rerun agreed with the RQ2e decisions on every row.
+
 # Discussion
 
 *What the graded object explains.* The companion paper found that every
@@ -610,18 +666,22 @@ account is not what predicts sensitivity; lexical overlap with the query
 is. For the model with a thinking budget the picture is different and
 sharper. With budget it is the ideal recognizer, so there is nothing for
 the graded account to separate. Without budget the shortening clause
-helps, as the graded account predicts, and the depth-preserving clause
-hurts, which it does not predict: for this recognizer a redundant clause
-has a cost of the same order as the benefit of shortening. The variable
-that makes equal-meaning inputs distinguishable at zero budget is thus
-two-sided, depth and clause count, and both terms vanish exactly when
-tokens can be spent. That the two effects cancel in the unsigned
-statistic, and were found only because the failure was examined and then
-retested under preregistration, is the methodological point of the paper.
+helps, as the graded account predicts, and any clause that does not
+shorten hurts, which it does not predict, in proportion to how many are
+added and more when the clause is underivable than when it is redundant.
+The second term is not lexical (the clauses are matched in shape and
+overlap) and not length (a derivable clause is cheap, an irrelevant one
+expensive); it is a logical property of the added clause relative to the
+theory, seen by a recognizer that does not compute the closure. Both
+terms vanish at once, in a single step of the thinking budget. That the
+opposite-signed effects cancel in the unsigned statistic, and were found
+only because a failure was examined and then retested under
+preregistration, twice, is the methodological point of the paper.
 
 *What remains untested.* The composition law is an equation between
-budgets in rounds; thinking tokens are a budget but not in rounds, so
-only its qualitative consequences were examined here. Pre-saturation was
+budgets in rounds; thinking tokens are a budget but not in rounds, and
+for this model they act as a threshold, so only qualitative consequences
+were examined here. Pre-saturation was
 not monotone at zero budget on either table (a two-atom hint hurts, a
 larger hint helps), which no reading of the graded structure predicts and
 which is reported as an open observation. A budget knob calibrated in
@@ -634,9 +694,10 @@ as it was for the learned reasoner.
 Two open-weight language models, both under two billion parameters, one
 rendering, no chat template, one forward pass; their decision-level tests
 are not evaluable and the margin-level analysis is exploratory. One
-closed model with a thinking budget, one budget setting on each side, a
+closed model with a thinking budget, three effective budget levels, a
 text-only decision readout, and no access to its reasoning; the signed
-effects are confirmed on one fresh table and no larger claim is made. The
+effects are confirmed on one fresh table and the dose–response results
+on the same fresh table, and no larger claim is made. The
 constructed models are small and the iterative reasoner's architecture
 makes the identification pattern available to a correct model, as stated in
 advance; the composition result for the two-round model was not
@@ -664,6 +725,7 @@ table_c/rq2_prompts.jsonl    a65f577afce5aecab424e4e4fa8def107144a4da276c0942001
 table_c/rq2c_presat.jsonl    346ea642db4d19d6667b0ef83589ba1492748e74c5a49626b0e7fd7ecd8bfb7e
 rq2d_llm.jsonl               6f2375f5bfe4c7eb585477840699409fd38d6be5c2757246e309456c053e4abe
 table_c/rq2e_llm.jsonl       211e2a7f32aea9a4756ce7ccfe1972d24cf2f9ca50b9bf6019c2af21974f29b2
+table_c/rq2f_dose.jsonl      3ddef4d5044ce8de4f261199632fd0ce959c6953a5f4d8e9227be5f4eacb05fc
 ```
 
 Weights and training logs: `jinu0633/recognition-paths-recognizers`, folder
@@ -681,7 +743,7 @@ with their outcomes. All runs are CPU-only.
 | 4 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 | 6 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 
-Table 6. The $k$-round symbolic reasoner and the four-round learned
+Table 8. The $k$-round symbolic reasoner and the four-round learned
 reasoner on the same table; accuracy is over all four queries.
 
 | pair $(j,k)$ | yes-rate $(H_j;k)$ | yes-rate $(H_0;j{+}k)$ | agreement on $t$ | agreement on $n$ |
@@ -693,6 +755,6 @@ reasoner on the same table; accuracy is over all four queries.
 | $(1,3)$ | 0.965 | 1.000 | 0.965 | 1.000 |
 | $(1,4)$, $(2,3)$, $(2,4)$ | 1.000 | 1.000 | 1.000 | 1.000 |
 
-Table 7. The composition test for the four-round model by query; the
+Table 9. The composition test for the four-round model by query; the
 symbolic reasoner agrees at 1.000 on every pair and the two-round model at
 0.975 or above on every primary pair.
