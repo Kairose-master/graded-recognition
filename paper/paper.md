@@ -545,11 +545,11 @@ depth direction is a small residual.
 | | B0, first table | B0, fresh table (preregistered) | B1, both tables |
 |---|---:|---:|---:|
 | acc$(D)$, target | 0.80 | 0.78 | 1.00 |
-| $\mathrm{dis}_F$ / $\mathrm{dis}_C$ / $\mathrm{dis}_L$ | 0.155 / 0.140 / 0.80 | 0.155 / 0.140 / 0.78 | 0 / 0 / 1.00 |
-| unsigned $\Delta=\mathrm{dis}_F-\mathrm{dis}_C$ [CI] | 0.015 [−0.055, 0.080] | 0.015 [−0.050, 0.080] | 0 |
-| net change of $F$ (fixes − breaks) [CI] | +0.135 [0.085, 0.190] | **+0.155 [0.110, 0.210]** | 0 |
-| net change of $C$ [CI] | −0.090 [−0.140, −0.040] | **−0.070 [−0.120, −0.020]** | 0 |
-| net change of $F_1$ | +0.200 | +0.220 | 0 |
+| $\mathrm{dis}_F$ / $\mathrm{dis}_C$ / $\mathrm{dis}_L$ | .155 / .140 / .80 | .155 / .140 / .78 | 0 / 0 / 1 |
+| unsigned $\Delta$ [CI] | 0.015 [−0.055, 0.080] | 0.015 [−0.050, 0.080] | 0 |
+| net $F$ (fixes − breaks) [CI] | +0.135 [0.085, 0.190] | **+0.155 [0.110, 0.210]** | 0 |
+| net $C$ [CI] | −0.090 [−0.140, −0.040] | **−0.070 [−0.120, −0.020]** | 0 |
+| net $F_1$ | +0.200 | +0.220 | 0 |
 | signed $F-C$ [CI] | +0.225 [0.165, 0.285] | +0.225 [0.170, 0.285] | 0 |
 
 Table 5. Gemini 3.1 Flash-Lite on the target query, 200 cases per table.
