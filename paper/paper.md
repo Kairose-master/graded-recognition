@@ -456,16 +456,16 @@ not preregistered for it and is reported as an observation.
 
 ## P4 holds: the one-round sandwich law on a fresh seed
 
-| pair $(j,k)$ | sandwich holds, four-round model [95\% CI] | exact law, four-round model | sandwich, two-round model | exact law, two-round model |
-|---|---|---:|---|---:|
-| $(1,1)$ | 1.000 [1.000, 1.000] | 1.000 | 0.993 [0.983, 1.000] | 0.892 |
-| $(1,2)$ | 1.000 [1.000, 1.000] | **0.895** | 0.993 [0.983, 1.000] | 0.993 |
-| $(1,3)$ | 1.000 [1.000, 1.000] | 0.983 | 0.998 [0.993, 1.000] | 0.998 |
-| $(1,4)$ | 1.000 [1.000, 1.000] | 1.000 | 0.998 [0.993, 1.000] | 0.998 |
-| $(2,1)$ | 1.000 [1.000, 1.000] | **0.818** | 1.000 [1.000, 1.000] | 0.990 |
-| $(2,2)$ | 1.000 [1.000, 1.000] | 0.990 | 0.998 [0.993, 1.000] | 0.998 |
-| $(2,3)$ | 1.000 [1.000, 1.000] | 0.998 | 1.000 [1.000, 1.000] | 1.000 |
-| $(2,4)$ | 1.000 [1.000, 1.000] | 1.000 | 0.998 [0.993, 1.000] | 0.998 |
+| pair $(j,k)$ | sandwich, 4-round [95\% CI] | exact law, 4-round | sandwich, 2-round | exact law, 2-round |
+|---|---|---:|---:|---:|
+| $(1,1)$ | 1.000 [1.000, 1.000] | 1.000 | 0.993 | 0.892 |
+| $(1,2)$ | 1.000 [1.000, 1.000] | **0.895** | 0.993 | 0.993 |
+| $(1,3)$ | 1.000 [1.000, 1.000] | 0.983 | 0.998 | 0.998 |
+| $(1,4)$ | 1.000 [1.000, 1.000] | 1.000 | 0.998 | 0.998 |
+| $(2,1)$ | 1.000 [1.000, 1.000] | **0.818** | 1.000 | 0.990 |
+| $(2,2)$ | 1.000 [1.000, 1.000] | 0.990 | 0.998 | 0.998 |
+| $(2,3)$ | 1.000 [1.000, 1.000] | 0.998 | 1.000 | 1.000 |
+| $(2,4)$ | 1.000 [1.000, 1.000] | 1.000 | 0.998 | 0.998 |
 
 Table 3. The sandwich law $T_{j+k-1}\subseteq\rho(H_j;\cdot\,;k)\subseteq T_{j+k}$
 and the exact composition law on 200 cases from a second seed (never seen
@@ -477,8 +477,9 @@ $(2,1)$ at almost the same rates as on the first table ($0.895$ vs $0.897$,
 $0.818$ vs $0.830$). **P4 holds.** The failure of P3 is thereby replaced
 by a law: the learned reasoner never derives more than the algebra allows
 and never less than the algebra allows with one round of slack. The
-two-round model satisfies the sandwich law at $\ge0.993$ and the exact law
-at $\ge0.990$ on the primary pairs.
+two-round model satisfies the sandwich law at $\ge0.993$ (all bootstrap
+lower bounds $\ge0.983$) and the exact law at $\ge0.990$ on the primary
+pairs.
 
 ## Language models
 
