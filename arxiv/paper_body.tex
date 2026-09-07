@@ -31,8 +31,6 @@ The object is the \emph{graded closure}. Forward chaining, stopped after \(k\) p
   \emph{A language model with a thinking budget.} With a thinking budget of 1024 tokens, Gemini 3.1 Flash-Lite has the oracle's decision profile on every row of two 200-case tables. Without thinking, the preregistered unsigned interaction failed; the preregistered signed follow-up on a fresh table held: a shortening clause helps (\(+0.155\)), a depth-preserving redundant clause hurts (\(-0.070\)), and thinking removes both effects exactly. A dose--response test then showed the cost growing with the number of redundant clauses, an irrelevant clause costing three times a redundant one (the preregistered ``count'' expectation was wrong), and the budget acting as a threshold: about 140 thinking tokens change nothing and about 300 make the model the oracle.
 \end{enumerate}
 
-Items 4--6 are renumbered from the preregistration documents, which are cited by their RQ labels (RQ2, RQ2b--g) in the artifacts section.
-
 Everything is frozen (SHA-256 locks on tables, commit hashes on code, weights on Hugging Face with training logs) and every learned-model result was preceded by a committed preregistration naming the comparison, the criterion, the controls and the sentence to be reported on failure.
 
 \section{Related work}\label{related-work}
@@ -172,7 +170,7 @@ budget \(k\) & acc\((D)\), target & \(\mathrm{dis}_F\) & \(\mathrm{dis}_{F_1}\) 
 
 Table 1. The four-round learned reasoner on 200 cases; decision-change rates relative to the base \(D\) on the target query. \(I=\Delta(2)-\Delta(4)=0.885\), 95\% CI \([0.84,0.93]\). \textbf{P1 holds.}
 
-The learned reasoner's decision table coincides with that of the \(k\)-round symbolic reasoner at every budget (Table 8 in the appendix lists both). At \(k=2\) the 177 depth-3 bases are NO and their \(F\) extensions (depth 2) YES; the 23 depth-4 bases are NO on both. At \(k=3\) the depth-4 bases separate (0.11) and at \(k=4\) nothing does except the logic change. Every \(D\)--\(F\) disagreement is \(F\) correct and \(D\) wrong; the reverse never occurs. The direct clause \(F_1\) separates already at \(k=1\), because it is a depth-1 derivation, and not at \(k=4\), so lexical overlap with the query plays no role for this recognizer. The controls behave as required: oracle and constant recognizer give \(\Delta=0\); Pythia-70M gives \(\Delta=-0.02\) \([-0.04,0.01]\) and \(\mathrm{dis}_L=0.04\), i.e.~it does not read.
+The learned reasoner's decision table coincides with that of the \(k\)-round symbolic reasoner at every budget (Table 9 in the appendix lists both). At \(k=2\) the 177 depth-3 bases are NO and their \(F\) extensions (depth 2) YES; the 23 depth-4 bases are NO on both. At \(k=3\) the depth-4 bases separate (0.11) and at \(k=4\) nothing does except the logic change. Every \(D\)--\(F\) disagreement is \(F\) correct and \(D\) wrong; the reverse never occurs. The direct clause \(F_1\) separates already at \(k=1\), because it is a depth-1 derivation, and not at \(k=4\), so lexical overlap with the query plays no role for this recognizer. The controls behave as required: oracle and constant recognizer give \(\Delta=0\); Pythia-70M gives \(\Delta=-0.02\) \([-0.04,0.01]\) and \(\mathrm{dis}_L=0.04\), i.e.~it does not read.
 
 A caveat stated in the preregistration: information in this architecture flows one hop per round, so a \emph{correct} model must show this pattern. The empirical content is that training produced this reader rather than a shortcut (no clause-count or lexical heuristic survives at \(k=2\)), that the gap closes exactly at the predicted budget, and that the pattern is what Theorem 4 says and nothing more.
 
@@ -248,7 +246,7 @@ On the fresh table the four-round model satisfies the sandwich law on every case
 \end{longtable}
 }
 
-Table 4b. The 4-round reader fed its own output, 200 fresh cases, mean over the target and the non-derivable atom.
+Table 4. The 4-round reader fed its own output, 200 fresh cases, mean over the target and the non-derivable atom.
 
 The composite lies within two rounds of slack on every case of every pair (\textbf{P9 holds}), and within one round on eight of nine pairs; only one round applied to a three-round output loses a second round, on 11\% of cases. Monotonicity violations are \(0.000\) at every budget (\textbf{P10 holds}), so the theorem's hypothesis is met and its conclusion is not a coincidence. The unit law fails: at zero rounds the reader agrees with the identity on \(0.571\) of atoms, a constant answer (it was never trained at zero rounds). The 2-round model's self-composition agrees with \(T_{j+k}\) on \(\ge0.990\) of cases on every pair and is equally unitless. What training keeps of the graded monad is therefore a lax, unitless, monotone graded family inside it; what it does not keep is the unit and the exactness of the multiplication.
 
@@ -271,7 +269,7 @@ set recognizer & 0.417 {[}0.289, 0.540{]} & 1.264 {[}1.124, 1.407{]} & −9.32 \
 \end{longtable}
 }
 
-Table 4. Mean signed margin shift on the target query relative to the base, in logits, over 200 cases; paired bootstrap 95\% CI. Exploratory.
+Table 5. Mean signed margin shift on the target query relative to the base, in logits, over 200 cases; paired bootstrap 95\% CI. Exploratory.
 
 For both language models the shortening clause moves the margin more than the depth-preserving clause, with intervals excluding \(0\), but by \(0.03\)--\(0.05\) logits: three to five times the non-reader's surface residual (which exists because \(F\) mentions the hypothesis atom in 198 of 200 cases and \(C\) in 131; on the 181 overlap-matched cases \(F-C\) is \(0.025\) and \(0.029\)) and an order of magnitude below the direct clause's effect (\(F_1-F\): \(0.10\) and \(0.29\)). The variable that predicts a redundant clause's visibility to these models is lexical overlap with the query; the depth direction is a small residual.
 
@@ -295,7 +293,7 @@ signed \(F-C\) {[}CI{]} & +0.225 {[}0.165, 0.285{]} & +0.225 {[}0.170, 0.285{]} 
 \end{longtable}
 }
 
-Table 5. Gemini 3.1 Flash-Lite on the target query, 200 cases per table.
+Table 6. Gemini 3.1 Flash-Lite on the target query, 200 cases per table.
 
 Both budgets pass the reading gate. At B1 the model is the oracle on every row of both tables: accuracy \(1.000\) on all conditions and queries, \(\mathrm{dis}_F=\mathrm{dis}_{F_1}=\mathrm{dis}_C=0\), \(\mathrm{dis}_L=1\). It is the first recognizer in this programme, other than the constructed ones at sufficient budget, with an exactly logical decision profile.
 
@@ -320,7 +318,7 @@ condition at B0 & \(n\) & net effect {[}95\% CI{]} \\
 \end{longtable}
 }
 
-Table 6. Net effect (fixes minus breaks on the target) of each condition relative to \(D\) for Gemini 3.1 Flash-Lite without thinking, fresh table.
+Table 7. Net effect (fixes minus breaks on the target) of each condition relative to \(D\) for Gemini 3.1 Flash-Lite without thinking, fresh table.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lrrrrr@{}}
@@ -336,7 +334,7 @@ budget (tokens used) & acc\((D)\) & net \(F\) & net \(F_1\) & net \(C_1\) & \(\m
 \end{longtable}
 }
 
-Table 7. The budget response on the same cases.
+Table 8. The budget response on the same cases.
 
 \textbf{P7a holds}: on the 106 cases with all three doses, \(C_1\) \(-0.057\), \(C_2\) \(-0.217\), \(C_3\) \(-0.283\); \(C_3-C_1=-0.226\) \([-0.311,-0.151]\). \textbf{P7b falls in the distraction cell}, not the expected count cell: \(\delta=-0.146\) \([-0.212,-0.081]\). An irrelevant clause that the model could not have derived costs about three times as much as a redundant one it could have, and about as much as two redundant ones, although neither touches the target's derivation. The cost of an added clause is therefore not a cost of length; it depends on the clause's logical relation to the theory, derivable being cheap and underivable expensive. \textbf{P8 fails}: at about 140 thinking tokens nothing changes (\(F\) \(+0.140\), \(C_1\) \(-0.070\), accuracy \(0.80\)), and at about 300 the model is the oracle. As preregistered, the budget is not a grade for this model; it is a threshold. The B0 rerun agreed with the RQ2e decisions on every row.
 
@@ -391,7 +389,7 @@ budget \(k\) & symbolic acc\((D)\) & symbolic \(\mathrm{dis}_F\) / \(\mathrm{dis
 \end{longtable}
 }
 
-Table 8. The \(k\)-round symbolic reasoner and the four-round learned reasoner on the same table; accuracy is over all four queries.
+Table 9. The \(k\)-round symbolic reasoner and the four-round learned reasoner on the same table; accuracy is over all four queries.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lrrrr@{}}
@@ -410,4 +408,4 @@ pair \((j,k)\) & yes-rate \((H_j;k)\) & yes-rate \((H_0;j{+}k)\) & agreement on 
 \end{longtable}
 }
 
-Table 9. The composition test for the four-round model by query; the symbolic reasoner agrees at 1.000 on every pair and the two-round model at 0.975 or above on every primary pair.
+Table 10. The composition test for the four-round model by query; the symbolic reasoner agrees at 1.000 on every pair and the two-round model at 0.975 or above on every primary pair.

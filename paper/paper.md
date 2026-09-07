@@ -96,9 +96,6 @@ into predictions about recognizers with a budget knob.
    and the budget acting as a threshold: about 140 thinking tokens change
    nothing and about 300 make the model the oracle.
 
-Items 4–6 are renumbered from the preregistration documents, which are
-cited by their RQ labels (RQ2, RQ2b–g) in the artifacts section.
-
 Everything is frozen (SHA-256 locks on tables, commit hashes on code,
 weights on Hugging Face with training logs) and every learned-model result
 was preceded by a committed preregistration naming the comparison, the
@@ -479,7 +476,7 @@ rates relative to the base $D$ on the target query.
 $I=\Delta(2)-\Delta(4)=0.885$, 95\% CI $[0.84,0.93]$. **P1 holds.**
 
 The learned reasoner's decision table coincides with that of the $k$-round
-symbolic reasoner at every budget (Table 8 in the appendix lists both). At
+symbolic reasoner at every budget (Table 9 in the appendix lists both). At
 $k=2$ the 177 depth-3 bases are NO and their $F$ extensions (depth 2) YES;
 the 23 depth-4 bases are NO on both. At $k=3$ the depth-4 bases separate
 (0.11) and at $k=4$ nothing does except the logic change. Every $D$–$F$
@@ -589,7 +586,7 @@ pairs.
 | $(2,1)$ | 1.000 | 1.000 | 0.895 |
 | $(3,1)$, $(3,2)$ | 1.000 | 1.000 | 0.983, 0.998 |
 
-Table 4b. The 4-round reader fed its own output, 200 fresh cases, mean
+Table 4. The 4-round reader fed its own output, 200 fresh cases, mean
 over the target and the non-derivable atom.
 
 The composite lies within two rounds of slack on every case of every pair
@@ -623,7 +620,7 @@ preregistered, in an exploratory analysis.
 | Qwen2.5-1.5B | 0.048 [0.030, 0.067] | 0.285 [0.268, 0.302] | −0.207 |
 | set recognizer | 0.417 [0.289, 0.540] | 1.264 [1.124, 1.407] | −9.32 |
 
-Table 4. Mean signed margin shift on the target query relative to the base,
+Table 5. Mean signed margin shift on the target query relative to the base,
 in logits, over 200 cases; paired bootstrap 95\% CI. Exploratory.
 
 For both language models the shortening clause moves the margin more than
@@ -648,7 +645,7 @@ depth direction is a small residual.
 | net $F_1$ | +0.200 | +0.220 | 0 |
 | signed $F-C$ [CI] | +0.225 [0.165, 0.285] | +0.225 [0.170, 0.285] | 0 |
 
-Table 5. Gemini 3.1 Flash-Lite on the target query, 200 cases per table.
+Table 6. Gemini 3.1 Flash-Lite on the target query, 200 cases per table.
 
 Both budgets pass the reading gate. At B1 the model is the oracle on
 every row of both tables: accuracy $1.000$ on all conditions and queries,
@@ -683,7 +680,7 @@ $+39$), while the minimal shortening saves none.
 | $C_3$ (three) | 106 | −0.283 [−0.377, −0.189] |
 | $N_1$ (one irrelevant non-derivable clause) | 198 | −0.217 [−0.278, −0.157] |
 
-Table 6. Net effect (fixes minus breaks on the target) of each condition
+Table 7. Net effect (fixes minus breaks on the target) of each condition
 relative to $D$ for Gemini 3.1 Flash-Lite without thinking, fresh table.
 
 | budget (tokens used) | acc$(D)$ | net $F$ | net $F_1$ | net $C_1$ | $\mathrm{dis}_L$ |
@@ -692,7 +689,7 @@ relative to $D$ for Gemini 3.1 Flash-Lite without thinking, fresh table.
 | 256 (≈140) | 0.80 | +0.140 | +0.200 | −0.070 | 0.80 |
 | 1024 (≈300) | 1.00 | 0 | 0 | 0 | 1.00 |
 
-Table 7. The budget response on the same cases.
+Table 8. The budget response on the same cases.
 
 **P7a holds**: on the 106 cases with all three doses, $C_1$ $-0.057$,
 $C_2$ $-0.217$, $C_3$ $-0.283$; $C_3-C_1=-0.226$ $[-0.311,-0.151]$. **P7b
@@ -834,7 +831,7 @@ which algebraic laws each recognizer satisfies. All runs are CPU-only.
 | 4 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 | 6 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 
-Table 8. The $k$-round symbolic reasoner and the four-round learned
+Table 9. The $k$-round symbolic reasoner and the four-round learned
 reasoner on the same table; accuracy is over all four queries.
 
 | pair $(j,k)$ | yes-rate $(H_j;k)$ | yes-rate $(H_0;j{+}k)$ | agreement on $t$ | agreement on $n$ |
@@ -846,6 +843,6 @@ reasoner on the same table; accuracy is over all four queries.
 | $(1,3)$ | 0.965 | 1.000 | 0.965 | 1.000 |
 | $(1,4)$, $(2,3)$, $(2,4)$ | 1.000 | 1.000 | 1.000 | 1.000 |
 
-Table 9. The composition test for the four-round model by query; the
+Table 10. The composition test for the four-round model by query; the
 symbolic reasoner agrees at 1.000 on every pair and the two-round model at
 0.975 or above on every primary pair.
