@@ -1,5 +1,7 @@
 # graded-recognition
 
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.22578931.svg)](https://doi.org/10.5281/zenodo.22578931)
+
 **Budgets as grades: which equal-meaning inputs a budgeted reasoner distinguishes.**
 
 A recognizer that reads a Horn theory with a fixed computation budget
@@ -27,8 +29,8 @@ were made and are cited by commit and hash:
 
 | artifact | where | version |
 |---|---|---|
-| Theory (Lean 4, core only): `RecognitionPaths/Graded.lean` | [recognition-paths](https://github.com/Kairose-master/recognition-paths) | `a21e675`; concept DOI 10.5281/zenodo.22495808 |
-| Tables, runners, analysis: `rq2/` | [proof-path-invariance](https://github.com/Kairose-master/proof-path-invariance) | `aa9b90c`; concept DOI 10.5281/zenodo.22495706 |
+| Theory (Lean 4, core only): `RecognitionPaths/Graded.lean`, `Closure.lean` | [recognition-paths](https://github.com/Kairose-master/recognition-paths) | `aa752b4` (v0.2.0, DOI 10.5281/zenodo.22636567; concept 10.5281/zenodo.22495808) |
+| Tables, runners, analysis: `rq2/` | [proof-path-invariance](https://github.com/Kairose-master/proof-path-invariance) | `1604871` (v0.2.0, DOI 10.5281/zenodo.22636570; concept 10.5281/zenodo.22495706) |
 | RQ2 table | `rq2/table/rq2_prompts.jsonl` | sha256 `39a82a17f9aae4027586339c58942a0114439bf0f978cf12724e754479676510` |
 | RQ2b table | `rq2/table/rq2b_presat.jsonl` | sha256 `5e42376dd5e01a7f4f6b04856a74a4596f8378ea6579786acce489928456a910` |
 | Models: `rq2/iter_r4`, `rq2/iter_r2`, `rq2/set7` | [jinu0633/recognition-paths-recognizers](https://huggingface.co/jinu0633/recognition-paths-recognizers) | folder `rq2/` |
@@ -58,6 +60,8 @@ Theorem, and the Hankel-table instrument) is `proof-path-invariance/docs/DRAFT.m
 The domain-independent audit tool is [recognition-audit](https://github.com/Kairose-master/recognition-audit).
 This repository depends on both and adds one object (the graded closure),
 two preregistered predictions, and their outcomes.
+
+This repository: concept DOI 10.5281/zenodo.22578931 (v0.1.1: 10.5281/zenodo.22636585).
 
 ## License
 

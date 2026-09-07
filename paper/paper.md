@@ -800,9 +800,9 @@ and does not predict the language models examined.
 # Artifacts and reproducibility
 
 Theory: `RecognitionPaths/Graded.lean` in the repository `recognition-paths`
-(Lean 4 v4.24.0, no Mathlib; concept DOI 10.5281/zenodo.22495808). Tables,
+(Lean 4 v4.24.0, no Mathlib; version 0.2.0, DOI 10.5281/zenodo.22636567; concept DOI 10.5281/zenodo.22495808). Tables,
 generators, runners, analysis and preregistrations: `rq2/` and `docs/` in
-`proof-path-invariance` (concept DOI 10.5281/zenodo.22495706). The frozen
+`proof-path-invariance` (version 0.2.0, DOI 10.5281/zenodo.22636570; concept DOI 10.5281/zenodo.22495706). The frozen
 tables have the SHA-256 locks
 
 ```
@@ -816,7 +816,7 @@ table_c/rq2f_dose.jsonl      3ddef4d5044ce8de4f261199632fd0ce959c6953a5f4d8e9227
 ```
 
 Weights and training logs: `jinu0633/recognition-paths-recognizers`, folder
-`rq2/` (Hugging Face). The paper repository `graded-recognition` carries the
+`rq2/` (Hugging Face). The paper repository `graded-recognition` (DOI 10.5281/zenodo.22578931) carries the
 manuscript, the exact commands, verbatim copies of the preregistrations
 (RQ2, RQ2b–g) with their outcomes, and `docs/MONAD.md`, the record of
 which algebraic laws each recognizer satisfies. All runs are CPU-only.
