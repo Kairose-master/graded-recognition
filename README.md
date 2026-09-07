@@ -43,6 +43,8 @@ were made and are cited by commit and hash:
 - `docs/PREREGISTRATION_RQ2D.md`, `docs/RESULTS_RQ2D.md` — a language model with a thinking budget (unsigned test failed; oracle with thinking).
 - `docs/PREREGISTRATION_RQ2E.md`, `docs/RESULTS_RQ2E.md` — the signed effects on a fresh seed (held: shortening helps, redundancy hurts, thinking removes both).
 - `docs/PREREGISTRATION_RQ2F.md`, `docs/RESULTS_RQ2F.md` — dose–response (more redundant clauses hurt more; an irrelevant clause hurts three times a redundant one; the budget is a step, not a slope).
+- `docs/PREREGISTRATION_RQ2G.md`, `docs/RESULTS_RQ2G.md` — the reader's own composition (slack ≤ 2, monotone, no unit).
+- `docs/MONAD.md` — the monad question: which algebraic laws each recognizer satisfies.
 - `REPRODUCE.md` — the exact commands.
 
 The preregistrations here are verbatim copies of the files committed in

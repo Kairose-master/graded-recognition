@@ -3,7 +3,7 @@ title: "Budgets as Grades: Which Equal-Meaning Inputs a Budgeted Reasoner Distin
 author: "Jinu Jang"
 date: "September 2026"
 abstract: |
-  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask *which* of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds of forward chaining, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-$k$ behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84,0.93]$) whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a preregistered $0.95$ criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation. A third preregistered test on a further 200 fresh cases confirmed the resulting one-round sandwich law without exception: the learned operator's answer from $j$-round-saturated hypotheses at budget $k$ lies between the symbolic answers at budgets $j+k-1$ and $j+k$, so it is a lax graded reader with exactly one round of slack. Two open-weight language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query. A language model with a thinking budget (Gemini 3.1 Flash-Lite) is the exact oracle on the table once it thinks; without thinking, the preregistered unsigned test failed, and a preregistered follow-up on a further fresh set of 200 cases showed why: a depth-shortening redundant clause raises its correct-answer rate by $0.155$ and an equally redundant depth-preserving clause lowers it by $0.070$, two effects of opposite sign that cancel in an unsigned statistic and both vanish once the model can spend tokens. A fourth preregistered test found the cost to grow with the number of redundant clauses, an irrelevant clause to cost three times a redundant one, and the budget response to be a step rather than a slope. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture; and for a language model at zero budget the distinguishing variable is two-sided, depth and clause count, and was found by testing laws rather than by assuming them.
+  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask *which* of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds of forward chaining, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-$k$ behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84,0.93]$) whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a preregistered $0.95$ criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation. A third preregistered test on a further 200 fresh cases confirmed the resulting one-round sandwich law without exception: the learned operator's answer from $j$-round-saturated hypotheses at budget $k$ lies between the symbolic answers at budgets $j+k-1$ and $j+k$, so it is a lax graded reader with exactly one round of slack. Two open-weight language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query. A language model with a thinking budget (Gemini 3.1 Flash-Lite) is the exact oracle on the table once it thinks; without thinking, the preregistered unsigned test failed, and a preregistered follow-up on a further fresh set of 200 cases showed why: a depth-shortening redundant clause raises its correct-answer rate by $0.155$ and an equally redundant depth-preserving clause lowers it by $0.070$, two effects of opposite sign that cancel in an unsigned statistic and both vanish once the model can spend tokens. A fourth preregistered test found the cost to grow with the number of redundant clauses, an irrelevant clause to cost three times a redundant one, and the budget response to be a step rather than a slope. Fed its own outputs, the learned reader composes within the bounds the lax structure proves (slack at most two rounds, usually one), is monotone, and has no unit. The graded structure therefore describes what a budgeted reasoner distinguishes; what training keeps of the graded monad is a lax, unitless graded family of monotone operators inside it; and for a language model at zero budget the distinguishing variable is two-sided, depth and clause count, and was found by testing laws rather than by assuming them.
 ---
 
 # Introduction
@@ -70,7 +70,17 @@ into predictions about recognizers with a budget knob.
    every pair and every case: the learned reasoner is exactly graded in what
    it separates and laxly graded, with one round of slack, in how it
    composes.
-4. *Open-weight language models.* At 0.5B and 1.5B parameters, single
+4. *The monad question, answered for the budgeted reasoner.* Logical
+   identity is equality of closures under the closure monad on theories
+   (Lean, `Closure.lean`); the graded closure is its filtration. A *lax
+   graded reader* (monotone operators sandwiched by the graded closure
+   with slack $s$) is defined and its composition laws proved. Fed its own
+   outputs on 200 fresh cases, the learned reader satisfies the lax
+   composition law (slack $\le2$, preregistered; slack $1$ on eight of nine
+   pairs), is monotone (preregistered), and fails the unit law. The
+   algebraic object the data support for a trained budgeted reasoner is a
+   lax, unitless graded family inside the graded monad, not the monad.
+5. *Open-weight language models.* At 0.5B and 1.5B parameters, single
    forward pass, the models do not read the table at the decision level; on
    the margin level the variable that predicts their sensitivity to
    redundant clauses is lexical overlap with the query, not depth.
@@ -85,6 +95,9 @@ into predictions about recognizers with a budget knob.
    times a redundant one (the preregistered "count" expectation was wrong),
    and the budget acting as a threshold: about 140 thinking tokens change
    nothing and about 300 make the model the oracle.
+
+Items 4–6 are renumbered from the preregistration documents, which are
+cited by their RQ labels (RQ2, RQ2b–g) in the artifacts section.
 
 Everything is frozen (SHA-256 locks on tables, commit hashes on code,
 weights on Hugging Face with training logs) and every learned-model result
@@ -241,6 +254,33 @@ the depth. Read as a prediction about an arbitrary recognizer with a budget
 knob, the theorem asserts a specific interaction between the kind of
 extension and the budget, and that is what is tested in Section 6.
 
+## The closure monad and lax graded readers
+
+The limit of the graded family is, on theories rather than atom sets, the
+clause closure $\mathrm{Cl}\,\Gamma=\{c:\Gamma\models c\}$ (`Closure.lean`).
+It is extensive, monotone and idempotent (`cl_extensive`, `cl_mono`,
+`cl_idem`), hence a monad on the poset of theories; its algebras are the
+closed theories, and
+
+> **Proposition 6 (`logicalEquiv_iff_cl_eq`).** $u\equiv_Lw$ iff
+> $\mathrm{Cl}\,\Gamma(u)=\mathrm{Cl}\,\Gamma(w)$.
+
+So the logical meaning space $L$ of [1] is the set of algebras of this
+monad, and $(T_k)$ is its filtration by rounds (`mem_cl_iff_exists_rounds`).
+
+A trained reader need not compute $T_k$. Define a *lax graded reader of
+slack $s$* (`LaxGraded Γ s`) as a family of monotone operators $R_k$ on
+atom sets with $T_{k-s}S\subseteq R_kS\subseteq T_kS$. Then (Lean names in
+parentheses): slack $0$ forces $R_k=T_k$ (`eq_rounds_of_slack_zero`);
+$R_0=\mathrm{id}$ for every slack (`zero_eq_id`); and composition inherits
+the sandwich with the slack added,
+$$T_{j+k-2s}S\subseteq R_j(R_kS)\subseteq T_{j+k}S\qquad(\texttt{comp\_sandwich}).$$
+The proofs are two applications of monotonicity and the composition law
+of $T$. The point of the definition is that its hypotheses (monotonicity,
+slack) and its conclusion (the composite's slack) are all measurable on a
+learned reader, so the theorem becomes a prediction about the reader's
+own multiplication.
+
 ## The budgeted recognizer and the composition law
 
 Let $\rho_k(w,q)=[\Gamma(w)\vdash_kq]$ (`roundsRecognizer`). It is a
@@ -306,6 +346,16 @@ preregistered on the fresh RQ2c table: (a) the net accuracy change of $F$
 at B0 (fixes minus breaks on the target) is $\ge+0.05$ with CI above 0;
 (b) that of $C$ is $\le-0.05$ with CI below 0; (c) at B1
 $\mathrm{dis}_F,\mathrm{dis}_C\le0.02$.
+
+**P9 and P10 (the reader's own composition).** Let
+$R_k\{a\}=\{a\}\cup\{g'\neq a:\rho(\{a\},g';k)=\text{YES}\}$ be the
+learned reader's own output, and feed it back: $\rho(R_k\{a\},g;j)$. P9: for
+all $(j,k)\in\{1,2,3\}^2$ the slack-2 sandwich
+$[g\in T_{j+k-2}\{a\}\Rightarrow\text{YES}]\wedge[\text{YES}\Rightarrow g\in T_{j+k}\{a\}]$
+holds with bootstrap lower bound $\ge0.95$ (what `comp_sandwich` guarantees
+if the reader is monotone with slack 1). P10: monotonicity, the rate of
+goals answered YES from $\{a\}$ and NO from $\{a,y\}$, is $\le0.05$ at each
+budget. The unit law $R_0=\mathrm{id}$ is reported, not predicted.
 
 **P7 and P8 (dose–response).** On the fresh table at B0: P7a, the net
 effect of three depth-preserving redundant clauses is more negative than
@@ -529,6 +579,32 @@ two-round model satisfies the sandwich law at $\ge0.993$ (all bootstrap
 lower bounds $\ge0.983$) and the exact law at $\ge0.990$ on the primary
 pairs.
 
+## P9 and P10 hold; the unit law fails
+
+| $(j,k)$ | slack-2 sandwich | slack-1 sandwich | exact $=T_{j+k}$ |
+|---|---:|---:|---:|
+| $(1,1)$, $(2,2)$, $(2,3)$, $(3,3)$ | 1.000 | 1.000 | 1.000 |
+| $(1,2)$ | 1.000 | 1.000 | 0.818 |
+| $(1,3)$ | 1.000 | **0.890** [0.860, 0.917] | 0.870 |
+| $(2,1)$ | 1.000 | 1.000 | 0.895 |
+| $(3,1)$, $(3,2)$ | 1.000 | 1.000 | 0.983, 0.998 |
+
+Table 4b. The 4-round reader fed its own output, 200 fresh cases, mean
+over the target and the non-derivable atom.
+
+The composite lies within two rounds of slack on every case of every pair
+(**P9 holds**), and within one round on eight of nine pairs; only one
+round applied to a three-round output loses a second round, on 11\% of
+cases. Monotonicity violations are $0.000$ at every budget (**P10
+holds**), so the theorem's hypothesis is met and its conclusion is not a
+coincidence. The unit law fails: at zero rounds the reader agrees with
+the identity on $0.571$ of atoms, a constant answer (it was never trained
+at zero rounds). The 2-round model's self-composition agrees with
+$T_{j+k}$ on $\ge0.990$ of cases on every pair and is equally unitless.
+What training keeps of the graded monad is therefore a lax, unitless,
+monotone graded family inside it; what it does not keep is the unit and
+the exactness of the multiplication.
+
 ## Language models
 
 On this rendering (seven atoms, five or six clauses) Qwen2.5-0.5B answers
@@ -678,6 +754,20 @@ opposite-signed effects cancel in the unsigned statistic, and were found
 only because a failure was examined and then retested under
 preregistration, twice, is the methodological point of the paper.
 
+*The monad question.* The programme asked for the monad only after the
+operations and equations. For the budgeted reasoner they are now known:
+an $\mathbb N$-graded family of monotone operators, bounded above by the
+graded closure and below by its previous grade, composing with slack at
+most two (usually one), and without unit. The closure monad and its
+filtration are the objects the reader approximates; the approximation is
+lax and unitless, and both of those facts were established by
+preregistered tests rather than assumed. For the language models no
+monad is named: at zero budget Gemini's behaviour is not a quotient of
+traces by a congruence (a derivable and an underivable clause act
+differently on the same consequence set), and no finite test family has
+been found closed for any language model. That is the honest state of
+the question.
+
 *What remains untested.* The composition law is an equation between
 budgets in rounds; thinking tokens are a budget but not in rounds, and
 for this model they act as a threshold, so only qualitative consequences
@@ -730,8 +820,9 @@ table_c/rq2f_dose.jsonl      3ddef4d5044ce8de4f261199632fd0ce959c6953a5f4d8e9227
 
 Weights and training logs: `jinu0633/recognition-paths-recognizers`, folder
 `rq2/` (Hugging Face). The paper repository `graded-recognition` carries the
-manuscript, the exact commands, and verbatim copies of the preregistrations
-with their outcomes. All runs are CPU-only.
+manuscript, the exact commands, verbatim copies of the preregistrations
+(RQ2, RQ2b–g) with their outcomes, and `docs/MONAD.md`, the record of
+which algebraic laws each recognizer satisfies. All runs are CPU-only.
 
 # Appendix: control validation and full budget tables {-}
 
