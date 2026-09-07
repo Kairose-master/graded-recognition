@@ -1,5 +1,5 @@
 \begin{abstract}
-A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask \emph{which} of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages \(T_k\), the atoms derivable in \(k\) parallel rounds of forward chaining, with \(T_0=\mathrm{id}\), \(T_j\circ T_k=T_{j+k}\), and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-\(k\) behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget \(k\) exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction \(0.885\), 95\% CI \([0.84,0.93]\)) whose decisions coincided with the \(k\)-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs (``a hint buys exactly its depth''), was then tested on the same weights and failed at tight budgets (agreement \(0.90\) and \(0.83\) against a preregistered \(0.95\) criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation, so the learned operator satisfies the lax inequality \(T_k\circ T_j\subseteq T_{j+k}\) but not the equation. Two language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query, with a small residual in the depth direction. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture, and was decided by testing the law rather than by assuming it.
+A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask \emph{which} of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages \(T_k\), the atoms derivable in \(k\) parallel rounds of forward chaining, with \(T_0=\mathrm{id}\), \(T_j\circ T_k=T_{j+k}\), and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-\(k\) behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget \(k\) exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction \(0.885\), 95\% CI \([0.84,0.93]\)) whose decisions coincided with the \(k\)-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs (``a hint buys exactly its depth''), was then tested on the same weights and failed at tight budgets (agreement \(0.90\) and \(0.83\) against a preregistered \(0.95\) criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation. A third preregistered test on a further 200 fresh cases confirmed the resulting one-round sandwich law without exception: the learned operator's answer from \(j\)-round-saturated hypotheses at budget \(k\) lies between the symbolic answers at budgets \(j+k-1\) and \(j+k\), so it is a lax graded reader with exactly one round of slack. Two language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query, with a small residual in the depth direction. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture, and was decided by testing the law rather than by assuming it.
 \end{abstract}
 
 \section{Introduction}\label{introduction}
@@ -22,7 +22,7 @@ The object is the \emph{graded closure}. Forward chaining, stopped after \(k\) p
 \item
   \emph{A held prediction.} The separation theorem, preregistered as an interaction between two budgets on a frozen table of 200 fresh Horn cases, held for a learned iterative reasoner with a rounds budget, with the full predicted shape and with exact agreement with the symbolic \(k\)-round reasoner at every budget.
 \item
-  \emph{A failed prediction.} The composition law, preregistered on the same weights, failed at the two tight budget pairs and held at the two others; all violations were lost derivations from multi-atom hypothesis sets. A model trained under a smaller budget satisfied the law. The learned reasoner is exactly graded in what it separates and only laxly graded in how it composes.
+  \emph{A failed prediction, and the law that replaces it.} The composition law, preregistered on the same weights, failed at the two tight budget pairs and held at the two others; all violations were lost derivations from multi-atom hypothesis sets. A model trained under a smaller budget satisfied the law. The one-round sandwich law suggested by the failure was then preregistered and confirmed on a further 200 fresh cases on every pair and every case: the learned reasoner is exactly graded in what it separates and laxly graded, with one round of slack, in how it composes.
 \item
   \emph{Language models.} At 0.5B and 1.5B parameters, single forward pass, the models do not read the table at the decision level; on the margin level the variable that predicts their sensitivity to redundant clauses is lexical overlap with the query, not depth.
 \end{enumerate}
@@ -98,6 +98,8 @@ Both predictions were committed, with the rules below, before any learned recogn
 
 \textbf{P3 (composition).} On the same weights, with hypothesis sets \(H_j=T_j\{a\}\) for \(j\in\{0,1,2\}\), the agreement rate between \(\rho(H_j;k)\) and \(\rho(H_0;j{+}k)\) over cases must have bootstrap lower bound \(\ge0.95\) on each of the four pairs \((j,k)\in\{(1,2),(2,1),(2,2),(1,3)\}\), chosen because the symbolic yes-rate on the target changes between budgets \(k\) and \(j+k\) there, so that a constant answer cannot pass.
 
+\textbf{P4 (sandwich).} After P3 failed with all violations in one direction, a third table of 200 cases was generated from a new seed and the weakened law was preregistered: \(g\in T_{j+k-1}\{a\}\) implies \(\rho(H_j;k)=\) YES, and \(\rho(H_j;k)=\) YES implies \(g\in T_{j+k}\{a\}\). Criterion: the per-case rate at which both bounds hold has bootstrap lower bound \(\ge0.95\) on every pair \(j\in\{1,2\}\), \(k\in\{1,2,3,4\}\).
+
 Sample size: 200 logical structures; for proportion differences near \(0.15\) the paired bootstrap half-width is about \(0.05\), and for agreement near \(0.97\) about \(0.025\). Both preregistrations state the sentence to be reported on failure; the one for P3 is reported verbatim in Section 6.3.
 
 \section{Instruments}\label{instruments}
@@ -144,7 +146,7 @@ budget \(k\) & acc\((D)\), target & \(\mathrm{dis}_F\) & \(\mathrm{dis}_{F_1}\) 
 
 Table 1. The four-round learned reasoner on 200 cases; decision-change rates relative to the base \(D\) on the target query. \(I=\Delta(2)-\Delta(4)=0.885\), 95\% CI \([0.84,0.93]\). \textbf{P1 holds.}
 
-The learned reasoner's decision table coincides with that of the \(k\)-round symbolic reasoner at every budget (Table 4 in the appendix lists both). At \(k=2\) the 177 depth-3 bases are NO and their \(F\) extensions (depth 2) YES; the 23 depth-4 bases are NO on both. At \(k=3\) the depth-4 bases separate (0.11) and at \(k=4\) nothing does except the logic change. Every \(D\)--\(F\) disagreement is \(F\) correct and \(D\) wrong; the reverse never occurs. The direct clause \(F_1\) separates already at \(k=1\), because it is a depth-1 derivation, and not at \(k=4\), so lexical overlap with the query plays no role for this recognizer. The controls behave as required: oracle and constant recognizer give \(\Delta=0\); Pythia-70M gives \(\Delta=-0.02\) \([-0.04,0.01]\) and \(\mathrm{dis}_L=0.04\), i.e.~it does not read.
+The learned reasoner's decision table coincides with that of the \(k\)-round symbolic reasoner at every budget (Table 5 in the appendix lists both). At \(k=2\) the 177 depth-3 bases are NO and their \(F\) extensions (depth 2) YES; the 23 depth-4 bases are NO on both. At \(k=3\) the depth-4 bases separate (0.11) and at \(k=4\) nothing does except the logic change. Every \(D\)--\(F\) disagreement is \(F\) correct and \(D\) wrong; the reverse never occurs. The direct clause \(F_1\) separates already at \(k=1\), because it is a depth-1 derivation, and not at \(k=4\), so lexical overlap with the query plays no role for this recognizer. The controls behave as required: oracle and constant recognizer give \(\Delta=0\); Pythia-70M gives \(\Delta=-0.02\) \([-0.04,0.01]\) and \(\mathrm{dis}_L=0.04\), i.e.~it does not read.
 
 A caveat stated in the preregistration: information in this architecture flows one hop per round, so a \emph{correct} model must show this pattern. The empirical content is that training produced this reader rather than a shortcut (no clause-count or lexical heuristic survives at \(k=2\)), that the gap closes exactly at the predicted budget, and that the pattern is what Theorem 4 says and nothing more.
 
@@ -177,6 +179,31 @@ Two of the four primary pairs fall below the criterion, so \textbf{P3 fails} for
 
 The failure has one direction. In all 41 disagreements at \((1,2)\) and all 68 at \((2,1)\) the model answers NO from the pre-saturated hypotheses at the tight budget where the law says YES; it never answers YES where the law says NO. It reads multi-atom hypothesis sets correctly when given slack (accuracy \(1.000\) at \(k=4\) with \(H_1\) and with \(H_2\)); agreement falls with the size of the hint (at \((2,1)\): \(|H_2|=3\): \(0.73\), \(4\): \(0.63\), \(5\): \(0.55\)) and is near-perfect on the depth-4 cases (\(0.957\)), where a spare round exists. The learned operator therefore satisfies the lax inequality \(T_k\circ T_j\subseteq T_{j+k}\), with strict inclusion on 20--35\% of cases at the tight budgets: it loses part of a round when a derivation starts from a set rather than an atom. The two-round model, which had to propagate from whatever it was given within two rounds, passes all four pairs; this was not preregistered for it and is reported as an observation.
 
+\subsection{P4 holds: the one-round sandwich law on a fresh seed}\label{p4-holds-the-one-round-sandwich-law-on-a-fresh-seed}
+
+{\def\LTcaptype{none} % do not increment counter
+\begin{longtable}[]{@{}llrlr@{}}
+\toprule\noalign{}
+pair \((j,k)\) & sandwich holds, four-round model {[}95\% CI{]} & exact law, four-round model & sandwich, two-round model & exact law, two-round model \\
+\midrule\noalign{}
+\endhead
+\bottomrule\noalign{}
+\endlastfoot
+\((1,1)\) & 1.000 {[}1.000, 1.000{]} & 1.000 & 0.993 {[}0.983, 1.000{]} & 0.892 \\
+\((1,2)\) & 1.000 {[}1.000, 1.000{]} & \textbf{0.895} & 0.993 {[}0.983, 1.000{]} & 0.993 \\
+\((1,3)\) & 1.000 {[}1.000, 1.000{]} & 0.983 & 0.998 {[}0.993, 1.000{]} & 0.998 \\
+\((1,4)\) & 1.000 {[}1.000, 1.000{]} & 1.000 & 0.998 {[}0.993, 1.000{]} & 0.998 \\
+\((2,1)\) & 1.000 {[}1.000, 1.000{]} & \textbf{0.818} & 1.000 {[}1.000, 1.000{]} & 0.990 \\
+\((2,2)\) & 1.000 {[}1.000, 1.000{]} & 0.990 & 0.998 {[}0.993, 1.000{]} & 0.998 \\
+\((2,3)\) & 1.000 {[}1.000, 1.000{]} & 0.998 & 1.000 {[}1.000, 1.000{]} & 1.000 \\
+\((2,4)\) & 1.000 {[}1.000, 1.000{]} & 1.000 & 0.998 {[}0.993, 1.000{]} & 0.998 \\
+\end{longtable}
+}
+
+Table 3. The sandwich law \(T_{j+k-1}\subseteq\rho(H_j;\cdot\,;k)\subseteq T_{j+k}\) and the exact composition law on 200 cases from a second seed (never seen by any analysis), two queries per case.
+
+On the fresh table the four-round model satisfies the sandwich law on every case of every pair, while the exact law fails again at \((1,2)\) and \((2,1)\) at almost the same rates as on the first table (\(0.895\) vs \(0.897\), \(0.818\) vs \(0.830\)). \textbf{P4 holds.} The failure of P3 is thereby replaced by a law: the learned reasoner never derives more than the algebra allows and never less than the algebra allows with one round of slack. The two-round model satisfies the sandwich law at \(\ge0.993\) and the exact law at \(\ge0.990\) on the primary pairs.
+
 \subsection{Language models}\label{language-models}
 
 On this rendering (seven atoms, five or six clauses) Qwen2.5-0.5B answers YES on every query of every condition (minimum margin \(1.23\)) and Qwen2.5-1.5B answers NO on every query, so the decision-level test cannot be evaluated for either; this is the ``not reading'' gate of the audit protocol in \cite{ppi2026} and is reported as not evaluable, not as a refutation. The margins carry partial reading (comparative accuracy \([m_t>m_n]\) on the base: \(0.79\) and \(0.89\)), so the extended observation can be examined, as preregistered, in an exploratory analysis.
@@ -196,7 +223,7 @@ set recognizer & 0.417 {[}0.289, 0.540{]} & 1.264 {[}1.124, 1.407{]} & −9.32 \
 \end{longtable}
 }
 
-Table 3. Mean signed margin shift on the target query relative to the base, in logits, over 200 cases; paired bootstrap 95\% CI. Exploratory.
+Table 4. Mean signed margin shift on the target query relative to the base, in logits, over 200 cases; paired bootstrap 95\% CI. Exploratory.
 
 For both language models the shortening clause moves the margin more than the depth-preserving clause, with intervals excluding \(0\), but by \(0.03\)--\(0.05\) logits: three to five times the non-reader's surface residual (which exists because \(F\) mentions the hypothesis atom in 198 of 200 cases and \(C\) in 131; on the 181 overlap-matched cases \(F-C\) is \(0.025\) and \(0.029\)) and an order of magnitude below the direct clause's effect (\(F_1-F\): \(0.10\) and \(0.29\)). The variable that predicts a redundant clause's visibility to these models is lexical overlap with the query; the depth direction is a small residual.
 
@@ -204,7 +231,7 @@ For both language models the shortening clause moves the margin more than the de
 
 \emph{What the graded object explains.} The companion paper found that every recognizer separates a trace from its redundant extension and could not say why. Theorem 4 gives the reason for one class of recognizers: separation happens exactly when the extension moves a derivation across the budget, and it is transient in the budget. The prediction held with the full shape, including the zero on depth-preserving extensions at every budget, the zero on all extensions at sufficient budget, and the one-sided direction of every disagreement. For the learned reasoner, then, the answer to ``which equal-meaning inputs does it distinguish?'' is exact and is given by the grade.
 
-\emph{Architecture versus training.} Two equations of the same object were tested on the same weights. The identification equation is made available by the architecture (one hop per round) and was realised by training. The composition equation is not implied by any locality bound, and the trained model violates it in a specific way: it is exactly graded in what it separates and only laxly graded in how it composes, with \(T_kT_j\subseteq T_{j+k}\) and a loss of part of a round when derivations start from sets. A model trained under a smaller budget satisfies the equation. The graded monad is therefore the right description of the \emph{quotient} the recognizer computes; whether the recognizer also carries the monad's \emph{multiplication} depends on how it was trained. In the programme's terms, the algebraic theory has been reached for one operation and refuted for one equation, by a test of the equation and not by construction.
+\emph{Architecture versus training.} Two equations of the same object were tested on the same weights. The identification equation is made available by the architecture (one hop per round) and was realised by training. The composition equation is not implied by any locality bound, and the trained model violates it in a specific and now lawful way: it is exactly graded in what it separates and laxly graded in how it composes, with \(T_{j+k-1}\subseteq\rho(H_j;k)\subseteq T_{j+k}\) on every fresh case. A model trained under a smaller budget satisfies the equation itself. The slack is therefore a training quantity with a definite size, one round, and not a failure of the description. The graded monad is therefore the right description of the \emph{quotient} the recognizer computes; whether the recognizer also carries the monad's \emph{multiplication} depends on how it was trained. In the programme's terms, the algebraic theory has been reached for one operation and refuted for one equation, by a test of the equation and not by construction.
 
 \emph{The language-model variable.} For the two language models the graded account is not what predicts sensitivity; lexical overlap with the query is. This is consistent with the companion paper's finding that surface change outweighs a one-arrow logical change for these models, and it sharpens it: the surface variable is now named, and the depth variable is measured as a residual an order of magnitude smaller. Nothing here says that larger models or models with a genuine budget behave the same way.
 
@@ -219,8 +246,10 @@ Two language models, both under two billion parameters, one rendering, no chat t
 Theory: \texttt{RecognitionPaths/Graded.lean} in the repository \texttt{recognition-paths} (Lean 4 v4.24.0, no Mathlib; concept DOI 10.5281/zenodo.22495808). Tables, generators, runners, analysis and preregistrations: \texttt{rq2/} and \texttt{docs/} in \texttt{proof-path-invariance} (concept DOI 10.5281/zenodo.22495706). The frozen tables have the SHA-256 locks
 
 \begin{verbatim}
-rq2_prompts.jsonl   39a82a17f9aae4027586339c58942a0114439bf0f978cf12724e754479676510
-rq2b_presat.jsonl   5e42376dd5e01a7f4f6b04856a74a4596f8378ea6579786acce489928456a910
+rq2_prompts.jsonl            39a82a17f9aae4027586339c58942a0114439bf0f978cf12724e754479676510
+rq2b_presat.jsonl            5e42376dd5e01a7f4f6b04856a74a4596f8378ea6579786acce489928456a910
+table_c/rq2_prompts.jsonl    a65f577afce5aecab424e4e4fa8def107144a4da276c0942001a0f17c0ec51ed
+table_c/rq2c_presat.jsonl    346ea642db4d19d6667b0ef83589ba1492748e74c5a49626b0e7fd7ecd8bfb7e
 \end{verbatim}
 
 Weights and training logs: \texttt{jinu0633/recognition-paths-recognizers}, folder \texttt{rq2/} (Hugging Face). The paper repository \texttt{graded-recognition} carries the manuscript, the exact commands, and verbatim copies of the preregistrations with their outcomes. All runs are CPU-only.
@@ -244,7 +273,7 @@ budget \(k\) & symbolic acc\((D)\) & symbolic \(\mathrm{dis}_F\) / \(\mathrm{dis
 \end{longtable}
 }
 
-Table 4. The \(k\)-round symbolic reasoner and the four-round learned reasoner on the same table; accuracy is over all four queries.
+Table 5. The \(k\)-round symbolic reasoner and the four-round learned reasoner on the same table; accuracy is over all four queries.
 
 {\def\LTcaptype{none} % do not increment counter
 \begin{longtable}[]{@{}lrrrr@{}}
@@ -263,4 +292,4 @@ pair \((j,k)\) & yes-rate \((H_j;k)\) & yes-rate \((H_0;j{+}k)\) & agreement on 
 \end{longtable}
 }
 
-Table 5. The composition test for the four-round model by query; the symbolic reasoner agrees at 1.000 on every pair and the two-round model at 0.975 or above on every primary pair.
+Table 6. The composition test for the four-round model by query; the symbolic reasoner agrees at 1.000 on every pair and the two-round model at 0.975 or above on every primary pair.

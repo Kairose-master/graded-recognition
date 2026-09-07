@@ -14,7 +14,9 @@ was preregistered and held on 200 fresh cases for a learned iterative
 reasoner (interaction 0.885, 95 % CI [0.84, 0.93]); the composition law
 was then tested as a second, independent prediction and **failed** for
 the same model at tight budgets while holding for a model trained under
-a smaller budget. LLMs at 0.5–1.5B do not read the table at the decision
+a smaller budget; the one-round sandwich law that the failure suggested
+was preregistered and held on a third set of 200 fresh cases without
+exception. LLMs at 0.5–1.5B do not read the table at the decision
 level; at the margin level their sensitivity is dominated by lexical
 overlap with the query, not by depth.
 
@@ -35,6 +37,8 @@ were made and are cited by commit and hash:
 - `arxiv/` — the arXiv submission: `paper.tex` (preamble and bibliography), `paper_body.tex` (generated from the Markdown), `paper.pdf`, `build.sh`.
 - `docs/PREREGISTRATION_RQ2.md`, `docs/RESULTS_RQ2.md` — the depth-vs-budget prediction (held).
 - `docs/PREREGISTRATION_RQ2B.md`, `docs/RESULTS_RQ2B.md` — the composition law (failed for the primary model).
+- `docs/PREREGISTRATION_RQ2C.md`, `docs/RESULTS_RQ2C.md` — the one-round sandwich law on a fresh seed (held on every case).
+- `docs/PREREGISTRATION_RQ2D.md` — a language model with a thinking budget (running).
 - `REPRODUCE.md` — the exact commands.
 
 The preregistrations here are verbatim copies of the files committed in

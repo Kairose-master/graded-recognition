@@ -3,7 +3,7 @@ title: "Budgets as Grades: Which Equal-Meaning Inputs a Budgeted Reasoner Distin
 author: "Jinu Jang"
 date: "September 2026"
 abstract: |
-  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask *which* of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds of forward chaining, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-$k$ behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84,0.93]$) whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a preregistered $0.95$ criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation, so the learned operator satisfies the lax inequality $T_k\circ T_j\subseteq T_{j+k}$ but not the equation. Two language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query, with a small residual in the depth direction. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture, and was decided by testing the law rather than by assuming it.
+  A recognizer that answers Horn entailment queries with a fixed computation budget does not treat logically identical inputs alike. We ask *which* of them it separates, and answer with a graded object. The closure operator of propositional Horn logic factors into stages $T_k$, the atoms derivable in $k$ parallel rounds of forward chaining, with $T_0=\mathrm{id}$, $T_j\circ T_k=T_{j+k}$, and limit the closure. We prove in Lean 4, without Mathlib, that the limit is sound and complete, that budget-$k$ behavioural identity is blind to premise order and repetition at every grade, and that a trace is separated from a redundant extension at budget $k$ exactly when the extension moves some derivation across the budget. This yields a preregistered prediction: a derivable clause that shortens the target derivation changes a budgeted recognizer's decision at a low budget and not at a high one, while an equally redundant clause that preserves depth changes nothing at any budget. On 200 fresh cases the prediction held for a learned iterative reasoner (interaction $0.885$, 95\% CI $[0.84,0.93]$) whose decisions coincided with the $k$-round symbolic reasoner at every budget. A second, independent prediction, the composition law read on inputs ("a hint buys exactly its depth"), was then tested on the same weights and failed at tight budgets (agreement $0.90$ and $0.83$ against a preregistered $0.95$ criterion), while holding for a model trained under a smaller budget; every violation was a lost derivation. A third preregistered test on a further 200 fresh cases confirmed the resulting one-round sandwich law without exception: the learned operator's answer from $j$-round-saturated hypotheses at budget $k$ lies between the symbolic answers at budgets $j+k-1$ and $j+k$, so it is a lax graded reader with exactly one round of slack. Two language models (0.5B and 1.5B parameters) did not read the table at the decision level; at the margin level their sensitivity to redundant clauses was dominated by lexical overlap with the query, with a small residual in the depth direction. The graded structure therefore describes what a budgeted reasoner distinguishes; whether it also obeys the structure's composition law is a property of training rather than architecture, and was decided by testing the law rather than by assuming it.
 ---
 
 # Introduction
@@ -61,12 +61,15 @@ into predictions about recognizers with a budget knob.
    held for a learned iterative reasoner with a rounds budget, with the full
    predicted shape and with exact agreement with the symbolic $k$-round
    reasoner at every budget.
-3. *A failed prediction.* The composition law, preregistered on the same
-   weights, failed at the two tight budget pairs and held at the two others;
-   all violations were lost derivations from multi-atom hypothesis sets. A
-   model trained under a smaller budget satisfied the law. The learned
-   reasoner is exactly graded in what it separates and only laxly graded in
-   how it composes.
+3. *A failed prediction, and the law that replaces it.* The composition
+   law, preregistered on the same weights, failed at the two tight budget
+   pairs and held at the two others; all violations were lost derivations
+   from multi-atom hypothesis sets. A model trained under a smaller budget
+   satisfied the law. The one-round sandwich law suggested by the failure
+   was then preregistered and confirmed on a further 200 fresh cases on
+   every pair and every case: the learned reasoner is exactly graded in what
+   it separates and laxly graded, with one round of slack, in how it
+   composes.
 4. *Language models.* At 0.5B and 1.5B parameters, single forward pass, the
    models do not read the table at the decision level; on the margin level
    the variable that predicts their sensitivity to redundant clauses is
@@ -282,6 +285,13 @@ $(j,k)\in\{(1,2),(2,1),(2,2),(1,3)\}$, chosen because the symbolic yes-rate
 on the target changes between budgets $k$ and $j+k$ there, so that a
 constant answer cannot pass.
 
+**P4 (sandwich).** After P3 failed with all violations in one direction,
+a third table of 200 cases was generated from a new seed and the weakened
+law was preregistered: $g\in T_{j+k-1}\{a\}$ implies $\rho(H_j;k)=$ YES, and
+$\rho(H_j;k)=$ YES implies $g\in T_{j+k}\{a\}$. Criterion: the per-case rate
+at which both bounds hold has bootstrap lower bound $\ge0.95$ on every pair
+$j\in\{1,2\}$, $k\in\{1,2,3,4\}$.
+
 Sample size: 200 logical structures; for proportion differences near
 $0.15$ the paired bootstrap half-width is about $0.05$, and for agreement
 near $0.97$ about $0.025$. Both preregistrations state the sentence to be
@@ -371,7 +381,7 @@ rates relative to the base $D$ on the target query.
 $I=\Delta(2)-\Delta(4)=0.885$, 95\% CI $[0.84,0.93]$. **P1 holds.**
 
 The learned reasoner's decision table coincides with that of the $k$-round
-symbolic reasoner at every budget (Table 4 in the appendix lists both). At
+symbolic reasoner at every budget (Table 5 in the appendix lists both). At
 $k=2$ the 177 depth-3 bases are NO and their $F$ extensions (depth 2) YES;
 the 23 depth-4 bases are NO on both. At $k=3$ the depth-4 bases separate
 (0.11) and at $k=4$ nothing does except the logic change. Every $D$–$F$
@@ -444,6 +454,32 @@ set rather than an atom. The two-round model, which had to propagate from
 whatever it was given within two rounds, passes all four pairs; this was
 not preregistered for it and is reported as an observation.
 
+## P4 holds: the one-round sandwich law on a fresh seed
+
+| pair $(j,k)$ | sandwich holds, four-round model [95\% CI] | exact law, four-round model | sandwich, two-round model | exact law, two-round model |
+|---|---|---:|---|---:|
+| $(1,1)$ | 1.000 [1.000, 1.000] | 1.000 | 0.993 [0.983, 1.000] | 0.892 |
+| $(1,2)$ | 1.000 [1.000, 1.000] | **0.895** | 0.993 [0.983, 1.000] | 0.993 |
+| $(1,3)$ | 1.000 [1.000, 1.000] | 0.983 | 0.998 [0.993, 1.000] | 0.998 |
+| $(1,4)$ | 1.000 [1.000, 1.000] | 1.000 | 0.998 [0.993, 1.000] | 0.998 |
+| $(2,1)$ | 1.000 [1.000, 1.000] | **0.818** | 1.000 [1.000, 1.000] | 0.990 |
+| $(2,2)$ | 1.000 [1.000, 1.000] | 0.990 | 0.998 [0.993, 1.000] | 0.998 |
+| $(2,3)$ | 1.000 [1.000, 1.000] | 0.998 | 1.000 [1.000, 1.000] | 1.000 |
+| $(2,4)$ | 1.000 [1.000, 1.000] | 1.000 | 0.998 [0.993, 1.000] | 0.998 |
+
+Table 3. The sandwich law $T_{j+k-1}\subseteq\rho(H_j;\cdot\,;k)\subseteq T_{j+k}$
+and the exact composition law on 200 cases from a second seed (never seen
+by any analysis), two queries per case.
+
+On the fresh table the four-round model satisfies the sandwich law on
+every case of every pair, while the exact law fails again at $(1,2)$ and
+$(2,1)$ at almost the same rates as on the first table ($0.895$ vs $0.897$,
+$0.818$ vs $0.830$). **P4 holds.** The failure of P3 is thereby replaced
+by a law: the learned reasoner never derives more than the algebra allows
+and never less than the algebra allows with one round of slack. The
+two-round model satisfies the sandwich law at $\ge0.993$ and the exact law
+at $\ge0.990$ on the primary pairs.
+
 ## Language models
 
 On this rendering (seven atoms, five or six clauses) Qwen2.5-0.5B answers
@@ -462,7 +498,7 @@ preregistered, in an exploratory analysis.
 | Qwen2.5-1.5B | 0.048 [0.030, 0.067] | 0.285 [0.268, 0.302] | −0.207 |
 | set recognizer | 0.417 [0.289, 0.540] | 1.264 [1.124, 1.407] | −9.32 |
 
-Table 3. Mean signed margin shift on the target query relative to the base,
+Table 4. Mean signed margin shift on the target query relative to the base,
 in logits, over 200 cases; paired bootstrap 95\% CI. Exploratory.
 
 For both language models the shortening clause moves the margin more than
@@ -492,10 +528,12 @@ grade.
 tested on the same weights. The identification equation is made available
 by the architecture (one hop per round) and was realised by training. The
 composition equation is not implied by any locality bound, and the trained
-model violates it in a specific way: it is exactly graded in what it
-separates and only laxly graded in how it composes, with
-$T_kT_j\subseteq T_{j+k}$ and a loss of part of a round when derivations start
-from sets. A model trained under a smaller budget satisfies the equation.
+model violates it in a specific and now lawful way: it is exactly graded
+in what it separates and laxly graded in how it composes, with
+$T_{j+k-1}\subseteq\rho(H_j;k)\subseteq T_{j+k}$ on every fresh case. A model
+trained under a smaller budget satisfies the equation itself. The slack is
+therefore a training quantity with a definite size, one round, and not a
+failure of the description.
 The graded monad is therefore the right description of the *quotient* the
 recognizer computes; whether the recognizer also carries the monad's
 *multiplication* depends on how it was trained. In the programme's terms,
@@ -546,8 +584,10 @@ generators, runners, analysis and preregistrations: `rq2/` and `docs/` in
 tables have the SHA-256 locks
 
 ```
-rq2_prompts.jsonl   39a82a17f9aae4027586339c58942a0114439bf0f978cf12724e754479676510
-rq2b_presat.jsonl   5e42376dd5e01a7f4f6b04856a74a4596f8378ea6579786acce489928456a910
+rq2_prompts.jsonl            39a82a17f9aae4027586339c58942a0114439bf0f978cf12724e754479676510
+rq2b_presat.jsonl            5e42376dd5e01a7f4f6b04856a74a4596f8378ea6579786acce489928456a910
+table_c/rq2_prompts.jsonl    a65f577afce5aecab424e4e4fa8def107144a4da276c0942001a0f17c0ec51ed
+table_c/rq2c_presat.jsonl    346ea642db4d19d6667b0ef83589ba1492748e74c5a49626b0e7fd7ecd8bfb7e
 ```
 
 Weights and training logs: `jinu0633/recognition-paths-recognizers`, folder
@@ -565,7 +605,7 @@ with their outcomes. All runs are CPU-only.
 | 4 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 | 6 | 1.00 | 0.00 / 0.00 / 1.00 | 1.00 | 0.00 / 0.00 / 1.00 |
 
-Table 4. The $k$-round symbolic reasoner and the four-round learned
+Table 5. The $k$-round symbolic reasoner and the four-round learned
 reasoner on the same table; accuracy is over all four queries.
 
 | pair $(j,k)$ | yes-rate $(H_j;k)$ | yes-rate $(H_0;j{+}k)$ | agreement on $t$ | agreement on $n$ |
@@ -577,6 +617,6 @@ reasoner on the same table; accuracy is over all four queries.
 | $(1,3)$ | 0.965 | 1.000 | 0.965 | 1.000 |
 | $(1,4)$, $(2,3)$, $(2,4)$ | 1.000 | 1.000 | 1.000 | 1.000 |
 
-Table 5. The composition test for the four-round model by query; the
+Table 6. The composition test for the four-round model by query; the
 symbolic reasoner agrees at 1.000 on every pair and the two-round model at
 0.975 or above on every primary pair.
